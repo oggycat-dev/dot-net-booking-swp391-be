@@ -1,48 +1,162 @@
 namespace CleanArchitectureTemplate.Domain.Enums;
 
 /// <summary>
-/// User roles enumeration
+/// User roles enumeration for FPT Booking System
 /// </summary>
 public enum UserRole
 {
     /// <summary>
-    /// Regular user
+    /// Student role - can book facilities with 7 days advance limit
     /// </summary>
-    User = 0,
+    Student = 0,
     
     /// <summary>
-    /// Administrator user
+    /// Lecturer role - can book facilities with 30 days advance limit and recurring bookings
     /// </summary>
-    Admin = 1,
+    Lecturer = 1,
     
     /// <summary>
-    /// Moderator user
+    /// Facility Administrator - manages facilities, bookings, and users
     /// </summary>
-    Moderator = 2
+    Admin = 2
 }
 
 /// <summary>
-/// Status enumeration for general use
+/// Booking status enumeration
 /// </summary>
-public enum Status
+public enum BookingStatus
 {
     /// <summary>
-    /// Inactive status
+    /// Booking request submitted, waiting for approval
     /// </summary>
-    Inactive = 0,
+    Pending = 0,
     
     /// <summary>
-    /// Active status
+    /// Booking approved by admin
     /// </summary>
-    Active = 1,
+    Approved = 1,
     
     /// <summary>
-    /// Pending status
+    /// Booking rejected by admin
     /// </summary>
-    Pending = 2,
+    Rejected = 2,
     
     /// <summary>
-    /// Suspended status
+    /// User confirmed the approved booking
     /// </summary>
-    Suspended = 3
+    Confirmed = 3,
+    
+    /// <summary>
+    /// Currently in use (checked in)
+    /// </summary>
+    InUse = 4,
+    
+    /// <summary>
+    /// Booking completed successfully
+    /// </summary>
+    Completed = 5,
+    
+    /// <summary>
+    /// Booking cancelled by user or admin
+    /// </summary>
+    Cancelled = 6,
+    
+    /// <summary>
+    /// User did not check in within 15 minutes
+    /// </summary>
+    NoShow = 7
+}
+
+/// <summary>
+/// Facility status enumeration
+/// </summary>
+public enum FacilityStatus
+{
+    /// <summary>
+    /// Facility is available for booking
+    /// </summary>
+    Available = 0,
+    
+    /// <summary>
+    /// Facility is under maintenance
+    /// </summary>
+    UnderMaintenance = 1,
+    
+    /// <summary>
+    /// Facility is temporarily unavailable
+    /// </summary>
+    Unavailable = 2
+}
+
+/// <summary>
+/// Maintenance status enumeration
+/// </summary>
+public enum MaintenanceStatus
+{
+    /// <summary>
+    /// Maintenance scheduled but not started
+    /// </summary>
+    Scheduled = 0,
+    
+    /// <summary>
+    /// Maintenance currently in progress
+    /// </summary>
+    InProgress = 1,
+    
+    /// <summary>
+    /// Maintenance completed
+    /// </summary>
+    Completed = 2,
+    
+    /// <summary>
+    /// Maintenance cancelled
+    /// </summary>
+    Cancelled = 3
+}
+
+/// <summary>
+/// Booking conflict type enumeration
+/// </summary>
+public enum ConflictType
+{
+    /// <summary>
+    /// Two bookings overlap in time
+    /// </summary>
+    TimeOverlap = 0,
+    
+    /// <summary>
+    /// Two approved bookings for same facility and time
+    /// </summary>
+    DoubleBooking = 1,
+    
+    /// <summary>
+    /// Booking conflicts with maintenance schedule
+    /// </summary>
+    MaintenanceConflict = 2
+}
+
+/// <summary>
+/// Conflict resolution method enumeration
+/// </summary>
+public enum ResolutionMethod
+{
+    /// <summary>
+    /// Resolved by system priority rules (Lecturer > Student, Earlier > Later)
+    /// </summary>
+    PriorityRule = 0,
+    
+    /// <summary>
+    /// Manually resolved by admin
+    /// </summary>
+    ManualResolution = 1,
+    
+    /// <summary>
+    /// One booking rescheduled to different time/facility
+    /// </summary>
+    Reschedule = 2,
+    
+    /// <summary>
+    /// One booking cancelled
+    /// </summary>
+    Cancellation = 3
 }

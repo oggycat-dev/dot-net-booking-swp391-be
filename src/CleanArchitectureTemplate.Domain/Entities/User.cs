@@ -4,24 +4,24 @@ using CleanArchitectureTemplate.Domain.Enums;
 namespace CleanArchitectureTemplate.Domain.Entities;
 
 /// <summary>
-/// Example User entity following DDD principles
+/// User entity for FPT Booking System (Student, Lecturer, Admin)
 /// </summary>
 public class User : BaseEntity
 {
     /// <summary>
-    /// User's email address
+    /// User code - Student ID or Employee ID (unique identifier)
+    /// </summary>
+    public string UserCode { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Full name of the user
+    /// </summary>
+    public string FullName { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// User's email address (must be @fpt.edu.vn domain)
     /// </summary>
     public string Email { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// User's first name
-    /// </summary>
-    public string FirstName { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// User's last name
-    /// </summary>
-    public string LastName { get; set; } = string.Empty;
     
     /// <summary>
     /// User's phone number
@@ -29,9 +29,54 @@ public class User : BaseEntity
     public string? PhoneNumber { get; set; }
     
     /// <summary>
-    /// Whether the user's email is confirmed
+    /// User's hashed password
     /// </summary>
-    public bool EmailConfirmed { get; set; }
+    public string PasswordHash { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// User's role (Student, Lecturer, Admin)
+    /// </summary>
+    public UserRole Role { get; set; } = UserRole.Student;
+    
+    /// <summary>
+    /// Department (e.g., Computer Science, Business Administration)
+    /// </summary>
+    public string? Department { get; set; }
+    
+    /// <summary>
+    /// Major - for students only (e.g., Software Engineering, AI)
+    /// </summary>
+    public string? Major { get; set; }
+    
+    /// <summary>
+    /// Campus ID - which campus the user belongs to
+    /// </summary>
+    public Guid? CampusId { get; set; }
+    
+    /// <summary>
+    /// Campus navigation property
+    /// </summary>
+    public Campus? Campus { get; set; }
+    
+    /// <summary>
+    /// Count of no-shows (did not check-in within 15 minutes)
+    /// </summary>
+    public int NoShowCount { get; set; } = 0;
+    
+    /// <summary>
+    /// Whether the user account is blocked
+    /// </summary>
+    public bool IsBlocked { get; set; } = false;
+    
+    /// <summary>
+    /// Date until which the user is blocked
+    /// </summary>
+    public DateTime? BlockedUntil { get; set; }
+    
+    /// <summary>
+    /// Reason for blocking the user
+    /// </summary>
+    public string? BlockedReason { get; set; }
     
     /// <summary>
     /// Whether the user account is active
@@ -39,19 +84,95 @@ public class User : BaseEntity
     public bool IsActive { get; set; } = true;
     
     /// <summary>
-    /// User's role
+    /// Whether the user's email is confirmed
     /// </summary>
-    public UserRole Role { get; set; } = UserRole.User;
+    public bool EmailConfirmed { get; set; }
     
     /// <summary>
-    /// User's hashed password
+    /// Last login timestamp
     /// </summary>
-    public string PasswordHash { get; set; } = string.Empty;
+    public DateTime? LastLogin { get; set; }
     
     /// <summary>
-    /// Full name computed property
+    /// Last login timestamp
     /// </summary>
-    public string FullName => $"{FirstName} {LastName}".Trim();
+    public DateTime? LastLogin { get; set; }
+    
+    // Navigation properties
+    /// <summary>
+    /// Bookings created by this user
+    /// </summary>
+    public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+    
+    /// <summary>
+    /// Bookings approved by this user (for admins)
+    /// </summary>
+    public ICollection<Booking> ApprovedBookings { get; set; } = new List<Booking>();
+    
+    // Domain methods
+    /// <summary>
+    /// Record a no-show incident
+    /// </summary>
+    public void RecordNoShow()
+    {
+        NoShowCount++;
+        
+        // Auto-block after 3 no-shows for 1 month
+        if (NoShowCount >= 3)
+        {
+            BlockUser("3 no-shows reached - automatic 1 month block", DateTime.UtcNow.AddMonths(1));
+        }
+        
+        this.MarkAsModified();
+    }
+    
+    /// <summary>
+    /// Block user account
+    /// </summary>
+    public void BlockUser(string reason, DateTime until)
+    {
+        IsBlocked = true;
+        BlockedReason = reason;
+        BlockedUntil = until;
+        this.MarkAsModified();
+    }
+    
+    /// <summary>
+    /// Unblock user account
+    /// </summary>
+    public void UnblockUser()
+    {
+        IsBlocked = false;
+        BlockedReason = null;
+        BlockedUntil = null;
+        this.MarkAsModified();
+    }
+    
+    /// <summary>
+    /// Check if user is currently blocked
+    /// </summary>
+    public bool IsCurrentlyBlocked()
+    {
+        if (!IsBlocked) return false;
+        
+        // Auto-unblock if block period expired
+        if (BlockedUntil.HasValue && BlockedUntil.Value < DateTime.UtcNow)
+        {
+            UnblockUser();
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /// <summary>
+    /// Reset no-show count (used when unblocking)
+    /// </summary>
+    public void ResetNoShowCount()
+    {
+        NoShowCount = 0;
+        this.MarkAsModified();
+    }
     
     /// <summary>
     /// Domain method to activate user account
@@ -78,5 +199,36 @@ public class User : BaseEntity
     {
         EmailConfirmed = true;
         this.MarkAsModified();
+    }
+    
+    /// <summary>
+    /// Update last login timestamp
+    /// </summary>
+    public void UpdateLastLogin()
+    {
+        LastLogin = DateTime.UtcNow;
+        this.MarkAsModified();
+    }
+    
+    /// <summary>
+    /// Check if user can book (not blocked, account active, email confirmed)
+    /// </summary>
+    public bool CanBook()
+    {
+        return IsActive && EmailConfirmed && !IsCurrentlyBlocked();
+    }
+    
+    /// <summary>
+    /// Get max days ahead user can book based on role
+    /// </summary>
+    public int GetMaxBookingDaysAhead()
+    {
+        return Role switch
+        {
+            UserRole.Student => 7,
+            UserRole.Lecturer => 30,
+            UserRole.Admin => 365,
+            _ => 7
+        };
     }
 }
