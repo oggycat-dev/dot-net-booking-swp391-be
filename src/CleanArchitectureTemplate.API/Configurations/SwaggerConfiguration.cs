@@ -19,53 +19,17 @@ public static class SwaggerConfiguration
     {
         services.AddSwaggerGen(c =>
         {
-            // API Document (Public/User APIs)
-            c.SwaggerDoc("api", new OpenApiInfo
+            // Single API Document
+            c.SwaggerDoc("v1", new OpenApiInfo
             {
-                Title = "Clean Architecture Template - User API",
+                Title = "Facility Booking System API",
                 Version = "v1",
-                Description = "Public APIs for user authentication and general operations",
+                Description = "APIs for facility booking management system",
                 Contact = new OpenApiContact
                 {
                     Name = "Developer",
                     Email = "developer@example.com"
                 }
-            });
-
-            // CMS Document (Admin APIs)
-            c.SwaggerDoc("cms", new OpenApiInfo
-            {
-                Title = "Clean Architecture Template - CMS API",
-                Version = "v1",
-                Description = "Admin APIs for content management system (CMS)",
-                Contact = new OpenApiContact
-                {
-                    Name = "Developer",
-                    Email = "developer@example.com"
-                }
-            });
-
-            // Group APIs by path
-            c.DocInclusionPredicate((docName, apiDesc) =>
-            {
-                if (string.IsNullOrEmpty(apiDesc.RelativePath))
-                    return false;
-
-                if (docName == "api")
-                {
-                    // Include only /api/Auth and other public APIs
-                    return apiDesc.RelativePath.StartsWith("api/Auth", StringComparison.OrdinalIgnoreCase) ||
-                           (apiDesc.RelativePath.StartsWith("api/", StringComparison.OrdinalIgnoreCase) &&
-                            !apiDesc.RelativePath.StartsWith("api/cms/", StringComparison.OrdinalIgnoreCase));
-                }
-
-                if (docName == "cms")
-                {
-                    // Include only /api/cms/* APIs
-                    return apiDesc.RelativePath.StartsWith("api/cms/", StringComparison.OrdinalIgnoreCase);
-                }
-
-                return false;
             });
 
             // Include XML comments
@@ -119,12 +83,7 @@ public static class SwaggerConfiguration
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                // User API endpoint
-                c.SwaggerEndpoint("/swagger/api/swagger.json", "User API v1");
-                
-                // CMS API endpoint
-                c.SwaggerEndpoint("/swagger/cms/swagger.json", "CMS API v1");
-                
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Facility Booking System API v1");
                 c.RoutePrefix = "swagger"; // Set Swagger UI at /swagger
                 c.DisplayRequestDuration(); // Show request duration
             });

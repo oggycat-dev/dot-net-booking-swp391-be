@@ -22,5 +22,7 @@ public interface IUnitOfWork : IDisposable
 {
     IUserRepository Users { get; }
     ICampusRepository Campuses { get; }
+    IFacilityRepository Facilities { get; }
+    IFacilityTypeRepository FacilityTypes { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
