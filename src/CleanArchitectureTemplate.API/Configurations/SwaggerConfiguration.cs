@@ -79,11 +79,12 @@ public static class SwaggerConfiguration
             // Add JWT authentication to Swagger
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                Description = "JWT Authorization header using the Bearer scheme. Enter your token in the text input below.",
                 Name = "Authorization",
                 In = ParameterLocation.Header,
-                Type = SecuritySchemeType.ApiKey,
-                Scheme = "Bearer"
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT"
             });
 
             c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -124,7 +125,7 @@ public static class SwaggerConfiguration
                 // CMS API endpoint
                 c.SwaggerEndpoint("/swagger/cms/swagger.json", "CMS API v1");
                 
-                c.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
+                c.RoutePrefix = "swagger"; // Set Swagger UI at /swagger
                 c.DisplayRequestDuration(); // Show request duration
             });
         }

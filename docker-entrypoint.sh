@@ -2,7 +2,7 @@
 set -e
 
 echo "========================================"
-echo "Starting Clean Architecture Template API"
+echo "Starting FPT Booking System API"
 echo "========================================"
 
 # Wait for PostgreSQL to be ready
@@ -14,20 +14,12 @@ done
 
 echo "PostgreSQL is ready!"
 
-# Check if migrations are needed
-echo "Checking database migrations..."
-
 # Set connection string for EF Core
 export ConnectionStrings__DefaultConnection="Host=db;Port=5432;Database=${POSTGRES_DB:-CleanArchitectureTemplateDb};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}"
 
-# Try to apply migrations
-echo "Applying database migrations..."
-
-# Since we're in runtime container, we'll let the application handle migrations
-# The application should check and apply migrations on startup
-
 echo "========================================"
 echo "Starting application..."
+echo "Application will apply migrations automatically"
 echo "========================================"
 
 # Start the application

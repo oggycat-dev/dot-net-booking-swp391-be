@@ -33,8 +33,8 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PaginatedResu
         if (!string.IsNullOrEmpty(request.SearchTerm))
         {
             query = query.Where(u => 
-                u.FirstName.Contains(request.SearchTerm) ||
-                u.LastName.Contains(request.SearchTerm) ||
+                u.FullName.Contains(request.SearchTerm) ||
+                u.UserCode.Contains(request.SearchTerm) ||
                 u.Email.Contains(request.SearchTerm));
         }
 
@@ -53,8 +53,7 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PaginatedResu
 
         // Apply pagination
         var paginatedUsers = query
-            .OrderBy(u => u.FirstName)
-            .ThenBy(u => u.LastName)
+            .OrderBy(u => u.FullName)
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
             .ToList();

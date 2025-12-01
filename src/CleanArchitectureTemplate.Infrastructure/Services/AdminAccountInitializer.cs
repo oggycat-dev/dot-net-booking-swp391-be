@@ -29,19 +29,22 @@ public class AdminAccountInitializer : IHostedService
         var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
 
         // Check if admin exists
-        var adminEmail = _configuration["Admin:Email"] ?? "admin@example.com";
+        var adminEmail = _configuration["Admin:Email"] ?? "admin@fpt.edu.vn";
         var existingAdmin = await unitOfWork.Users.GetByEmailAsync(adminEmail);
         
         if (existingAdmin == null)
         {
             var admin = new User
             {
+                UserCode = _configuration["Admin:Username"] ?? "ADMIN",
+                FullName = $"{_configuration["Admin:FirstName"] ?? "System"} {_configuration["Admin:LastName"] ?? "Administrator"}",
                 Email = adminEmail,
-                FirstName = _configuration["Admin:FirstName"] ?? "Admin",
-                LastName = _configuration["Admin:LastName"] ?? "User",
                 Role = UserRole.Admin,
+                Department = "IT Department",
                 IsActive = true,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                NoShowCount = 0,
+                IsBlocked = false
             };
             
             // Hash the admin password

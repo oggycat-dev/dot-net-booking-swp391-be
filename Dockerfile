@@ -23,21 +23,20 @@ RUN dotnet publish src/CleanArchitectureTemplate.API/CleanArchitectureTemplate.A
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
-# Install EF Core tools for migrations
-RUN dotnet tool install --global dotnet-ef --version 8.0.0
-ENV PATH="${PATH}:/root/.dotnet/tools"
+# Install PostgreSQL client for pg_isready and wait-for-it script
+RUN apt-get update && apt-get install -y postgresql-client netcat-traditional && rm -rf /var/lib/apt/lists/*
 
 # Copy published app
 COPY --from=build /app/out .
 
-# Copy migration files
-COPY --from=build /app/src/CleanArchitectureTemplate.Infrastructure/Migrations ./Migrations
-
-# Copy entrypoint script
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
+# Create wwwroot directory for file uploads
+RUN mkdir -p /app/wwwroot && chmod 755 /app/wwwroot
 
 EXPOSE 80
 EXPOSE 443
 
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+# Set environment variables
+ENV ASPNETCORE_URLS=http://+:80
+
+# Start the application directly
+CMD ["dotnet", "CleanArchitectureTemplate.API.dll"]

@@ -36,8 +36,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserD
         }
 
         var email = new Email(request.Email);
-        user.FirstName = request.FirstName;
-        user.LastName = request.LastName;
+        user.FullName = $"{request.FirstName} {request.LastName}".Trim();
         user.Email = email;
         user.Role = request.Role;
         user.IsActive = request.IsActive;

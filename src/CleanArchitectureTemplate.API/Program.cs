@@ -71,7 +71,10 @@ builder.Services.AddHttpContextAccessor();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (isDevelopment)
+// Always apply migrations in containerized environment
+var shouldApplyMigrations = isDevelopment || builder.Configuration.GetValue<bool>("ApplyMigrationsOnStartup", false);
+
+if (shouldApplyMigrations)
 {
     try
     {

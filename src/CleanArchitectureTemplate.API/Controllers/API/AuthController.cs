@@ -48,7 +48,7 @@ public class AuthController : ControllerBase
             Email = request.Email,
             FirstName = request.FirstName,
             LastName = request.LastName,
-            Role = UserRole.User.ToString() // Default role for registration
+            Role = UserRole.Student.ToString() // Default role for registration
         };
 
         var result = await _mediator.Send(command);

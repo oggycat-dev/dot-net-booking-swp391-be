@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   api:
     container_name: clean-architecture-api
@@ -16,6 +14,7 @@ services:
       # Application Server Configuration
       - ASPNETCORE_URLS=http://+:80
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ApplyMigrationsOnStartup=true
       
       # Application Configuration
       - App__Environment=${App__Environment:-Development}
@@ -42,7 +41,7 @@ services:
       # Admin Account Configuration
       - Admin__Username=${Admin__Username:-admin}
       - Admin__Password=${Admin__Password:-Admin@123456}
-      - Admin__Email=${Admin__Email:-admin@cleanarchitecture.com}
+      - Admin__Email=${Admin__Email:-admin@fpt.edu.vn}
       - Admin__FirstName=${Admin__FirstName:-System}
       - Admin__LastName=${Admin__LastName:-Administrator}
       

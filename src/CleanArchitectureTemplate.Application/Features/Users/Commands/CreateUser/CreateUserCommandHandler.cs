@@ -46,13 +46,15 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, ApiRe
         var user = new User
         {
             Id = Guid.NewGuid(),
+            UserCode = request.Email.Split('@')[0], // Extract user code from email
+            FullName = $"{request.FirstName} {request.LastName}".Trim(),
             Email = request.Email,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
             PhoneNumber = request.PhoneNumber,
-            Role = Enum.TryParse<UserRole>(request.Role, out var role) ? role : UserRole.User,
+            Role = Enum.TryParse<UserRole>(request.Role, out var role) ? role : UserRole.Student,
             EmailConfirmed = false,
-            IsActive = true
+            IsActive = true,
+            NoShowCount = 0,
+            IsBlocked = false
         };
 
         // Hash password if provided

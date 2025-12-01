@@ -93,11 +93,6 @@ public class User : BaseEntity
     /// </summary>
     public DateTime? LastLogin { get; set; }
     
-    /// <summary>
-    /// Last login timestamp
-    /// </summary>
-    public DateTime? LastLogin { get; set; }
-    
     // Navigation properties
     /// <summary>
     /// Bookings created by this user
