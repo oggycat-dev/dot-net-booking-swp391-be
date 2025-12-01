@@ -1,0 +1,112 @@
+##
+## .NET Clean Architecture Template - GitIgnore
+##
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Mono auto generated files
+mono_crash.*
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options directory
+.vs/
+.vscode/
+*.code-workspace
+.history/
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# ReSharper
+_ReSharper*/
+*.DotSettings.user
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+
+# Build output files
+*.obj
+*.pdb
+*.dll
+*.exe
+*.cache
+publish/
+
+##
+## .NET Core / ASP.NET Core
+##
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.mdf
+*.ldf
+*.ndf
+
+# Entity Framework Core
+**/Migrations/*.Designer.cs
+**/Migrations/*Snapshot.cs
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+!docker.env
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+secrets.json
+
+# Docker
+docker-compose.override.yml
+
+##
+## OS and IDE Files
+##
+
+# OS Files
+.DS_Store
+Thumbs.db
+*~
+
+# Logs
+*.log
+logs/
+
+# Test Results
+TestResults/
+*.trx
+
+# Temporary files
+*.tmp
+tmp/
+temp/
+
