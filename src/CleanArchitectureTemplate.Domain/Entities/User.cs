@@ -84,6 +84,26 @@ public class User : BaseEntity
     public bool IsActive { get; set; } = true;
     
     /// <summary>
+    /// Whether the user registration is approved by admin (for Student/Lecturer only)
+    /// </summary>
+    public bool IsApproved { get; set; } = false;
+    
+    /// <summary>
+    /// Admin who approved this registration
+    /// </summary>
+    public Guid? ApprovedBy { get; set; }
+    
+    /// <summary>
+    /// Admin navigation property
+    /// </summary>
+    public User? ApprovedByAdmin { get; set; }
+    
+    /// <summary>
+    /// When the registration was approved
+    /// </summary>
+    public DateTime? ApprovedAt { get; set; }
+    
+    /// <summary>
     /// Whether the user's email is confirmed
     /// </summary>
     public bool EmailConfirmed { get; set; }

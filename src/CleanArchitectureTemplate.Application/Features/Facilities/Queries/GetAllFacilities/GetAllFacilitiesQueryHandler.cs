@@ -1,5 +1,6 @@
 using CleanArchitectureTemplate.Application.Common.DTOs.Facility;
 using CleanArchitectureTemplate.Application.Common.Interfaces;
+using CleanArchitectureTemplate.Domain.Enums;
 using MediatR;
 
 namespace CleanArchitectureTemplate.Application.Features.Facilities.Queries.GetAllFacilities;
@@ -7,21 +8,34 @@ namespace CleanArchitectureTemplate.Application.Features.Facilities.Queries.GetA
 public class GetAllFacilitiesQueryHandler : IRequestHandler<GetAllFacilitiesQuery, List<FacilityDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetAllFacilitiesQueryHandler(IUnitOfWork unitOfWork)
+    public GetAllFacilitiesQueryHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
     {
         _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
     }
 
     public async Task<List<FacilityDto>> Handle(GetAllFacilitiesQuery request, CancellationToken cancellationToken)
     {
+        // Auto-filter by campus for Student/Lecturer
+        var campusId = request.CampusId;
+        if (!campusId.HasValue && _currentUserService.IsAuthenticated)
+        {
+            var role = _currentUserService.Role;
+            if (role == UserRole.Student.ToString() || role == UserRole.Lecturer.ToString())
+            {
+                campusId = _currentUserService.CampusId;
+            }
+        }
+
         var facilities = request.AvailableOnly == true
-            ? await _unitOfWork.Facilities.GetAvailableFacilitiesAsync(request.CampusId, request.FacilityTypeId)
+            ? await _unitOfWork.Facilities.GetAvailableFacilitiesAsync(campusId, request.FacilityTypeId)
             : await _unitOfWork.Facilities.GetAllAsync();
 
-        if (request.CampusId.HasValue && request.AvailableOnly != true)
+        if (campusId.HasValue && request.AvailableOnly != true)
         {
-            facilities = await _unitOfWork.Facilities.GetByCampusIdAsync(request.CampusId.Value);
+            facilities = await _unitOfWork.Facilities.GetByCampusIdAsync(campusId.Value);
         }
 
         if (request.FacilityTypeId.HasValue && request.AvailableOnly != true)

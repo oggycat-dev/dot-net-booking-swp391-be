@@ -7,7 +7,6 @@ using CleanArchitectureTemplate.Application.Common.Exceptions;
 using CleanArchitectureTemplate.Application.Common.Interfaces;
 using CleanArchitectureTemplate.Domain.Entities;
 using CleanArchitectureTemplate.Domain.Enums;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -17,20 +16,17 @@ namespace CleanArchitectureTemplate.Infrastructure.Services;
 public class AuthenticationService : IAuthenticationService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IPasswordHasher<User> _passwordHasher;
     private readonly IConfiguration _configuration;
     private readonly ITokenService _tokenService;
     private readonly IApplicationDbContext _dbContext;
 
     public AuthenticationService(
         IUnitOfWork unitOfWork,
-        IPasswordHasher<User> passwordHasher,
         IConfiguration configuration,
         ITokenService tokenService,
         IApplicationDbContext dbContext)
     {
         _unitOfWork = unitOfWork;
-        _passwordHasher = passwordHasher;
         _configuration = configuration;
         _tokenService = tokenService;
         _dbContext = dbContext;
@@ -58,12 +54,8 @@ public class AuthenticationService : IAuthenticationService
             throw new UnauthorizedAccessException($"Account is blocked until {user.BlockedUntil:yyyy-MM-dd HH:mm}. Reason: {user.BlockedReason}");
         }
 
-        var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(
-            user,
-            user.PasswordHash,
-            request.Password);
-
-        if (passwordVerificationResult == PasswordVerificationResult.Failed)
+        // Verify password using BCrypt
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
         {
             throw new UnauthorizedAccessException("Invalid email or password");
         }
@@ -111,13 +103,14 @@ public class AuthenticationService : IAuthenticationService
             throw new ValidationException("Selected campus is not active");
         }
 
-        // Generate user code if not provided
-        var userCode = request.UserCode ?? await GenerateUserCodeAsync();
-
+        // Generate user code from email (part before @)
+        var userCode = request.Email.Split('@')[0].ToUpper();
+        
         // Check if user code already exists
         if (await _unitOfWork.Users.IsUserCodeExistsAsync(userCode))
         {
-            throw new ValidationException("User code already exists");
+            // Add random suffix if duplicate
+            userCode = $"{userCode}{new Random().Next(100, 999)}";
         }
 
         // Create new user
@@ -135,8 +128,8 @@ public class AuthenticationService : IAuthenticationService
             CreatedAt = DateTime.UtcNow
         };
 
-        // Hash password
-        user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
+        // Hash password using BCrypt
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
         await _unitOfWork.Users.AddAsync(user);
         await _unitOfWork.SaveChangesAsync();
@@ -197,19 +190,14 @@ public class AuthenticationService : IAuthenticationService
         var user = await _unitOfWork.Users.GetByIdAsync(userId)
             ?? throw new NotFoundException(nameof(User), userId);
 
-        // Verify current password
-        var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(
-            user,
-            user.PasswordHash,
-            request.CurrentPassword);
-
-        if (passwordVerificationResult == PasswordVerificationResult.Failed)
+        // Verify current password using BCrypt
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
         {
             throw new ValidationException("Current password is incorrect");
         }
 
-        // Hash and update new password
-        user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
+        // Hash and update new password using BCrypt
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
         user.ModifiedAt = DateTime.UtcNow;
 
         await _unitOfWork.SaveChangesAsync();

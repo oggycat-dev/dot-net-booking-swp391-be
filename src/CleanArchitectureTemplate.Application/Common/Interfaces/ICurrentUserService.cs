@@ -16,6 +16,16 @@ public interface ICurrentUserService
     string? UserEmail { get; }
     
     /// <summary>
+    /// Current user's campus ID
+    /// </summary>
+    Guid? CampusId { get; }
+    
+    /// <summary>
+    /// Current user's role
+    /// </summary>
+    string? Role { get; }
+    
+    /// <summary>
     /// Whether current user is authenticated
     /// </summary>
     bool IsAuthenticated { get; }

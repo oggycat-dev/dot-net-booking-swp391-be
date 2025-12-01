@@ -20,13 +20,24 @@ public class CurrentUserService : ICurrentUserService
         get
         {
             var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("sub")?.Value ??
-                             _httpContextAccessor.HttpContext?.User?.FindFirst("id")?.Value;
+                             _httpContextAccessor.HttpContext?.User?.FindFirst("userId")?.Value;
             
             return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
         }
     }
 
     public string? UserEmail => _httpContextAccessor.HttpContext?.User?.FindFirst("email")?.Value;
+
+    public Guid? CampusId
+    {
+        get
+        {
+            var campusIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("campusId")?.Value;
+            return Guid.TryParse(campusIdClaim, out var campusId) ? campusId : null;
+        }
+    }
+
+    public string? Role => _httpContextAccessor.HttpContext?.User?.FindFirst("role")?.Value;
 
     public bool IsAuthenticated => _httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
 }

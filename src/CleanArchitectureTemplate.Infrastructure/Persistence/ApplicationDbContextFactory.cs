@@ -30,8 +30,8 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
             .Build();
 
         var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
-            ?? "Host=localhost;Port=5432;Database=CleanArchitectureTemplateDb;Username=postgres;Password=12345";
+            ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+            
             
         optionsBuilder.UseNpgsql(connectionString);
 
@@ -46,5 +46,7 @@ internal class MockCurrentUserService : Application.Common.Interfaces.ICurrentUs
 {
     public Guid? UserId => Guid.NewGuid();
     public string? UserEmail => "system@example.com";
+    public Guid? CampusId => null;
+    public string? Role => "Admin";
     public bool IsAuthenticated => true;
 }

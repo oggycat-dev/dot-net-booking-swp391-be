@@ -2,7 +2,6 @@ using CleanArchitectureTemplate.Application.Common.Interfaces;
 using CleanArchitectureTemplate.Domain.Entities;
 using CleanArchitectureTemplate.Domain.Enums;
 using CleanArchitectureTemplate.Domain.ValueObjects;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -26,7 +25,6 @@ public class AdminAccountInitializer : IHostedService
     {
         using var scope = _serviceProvider.CreateScope();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
 
         // Check if admin exists
         var adminEmail = _configuration["Admin:Email"] ?? "admin@fpt.edu.vn";
@@ -43,13 +41,14 @@ public class AdminAccountInitializer : IHostedService
                 Department = "IT Department",
                 IsActive = true,
                 EmailConfirmed = true,
+                IsApproved = true,
                 NoShowCount = 0,
                 IsBlocked = false
             };
             
-            // Hash the admin password
+            // Hash the admin password using BCrypt
             var adminPassword = _configuration["Admin:Password"] ?? "Admin@123456";
-            admin.PasswordHash = passwordHasher.HashPassword(admin, adminPassword);
+            admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
 
             await unitOfWork.Users.AddAsync(admin);
             await unitOfWork.SaveChangesAsync(cancellationToken);

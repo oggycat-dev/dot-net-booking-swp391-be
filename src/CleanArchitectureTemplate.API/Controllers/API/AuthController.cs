@@ -1,6 +1,10 @@
 using CleanArchitectureTemplate.Application.Common.DTOs;
 using CleanArchitectureTemplate.Application.Common.DTOs.Auth;
 using CleanArchitectureTemplate.Application.Common.Interfaces;
+using CleanArchitectureTemplate.Application.Features.Auth.Commands.Register;
+using CleanArchitectureTemplate.Application.Features.Auth.Commands.ApproveRegistration;
+using CleanArchitectureTemplate.Application.Features.Auth.Queries.GetPendingRegistrations;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,29 +19,43 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthenticationService _authService;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IMediator _mediator;
 
     public AuthController(
         IAuthenticationService authService,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IMediator mediator)
     {
         _authService = authService;
         _currentUserService = currentUserService;
+        _mediator = mediator;
     }
 
     /// <summary>
-    /// Register a new user account with @fpt.edu.vn email
+    /// Register a new user account (Student/Lecturer) - requires admin approval
     /// </summary>
-    /// <param name="request">Registration information including campus selection</param>
-    /// <returns>Login response with JWT tokens</returns>
+    /// <param name="request">Registration information including campus and role selection</param>
+    /// <returns>Registration submission confirmation</returns>
     [HttpPost("register")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<Guid>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<LoginResponse>>> Register([FromBody] RegisterRequest request)
+    public async Task<ActionResult<ApiResponse<Guid>>> Register([FromBody] RegisterRequest request)
     {
-        var loginResponse = await _authService.RegisterAsync(request);
-        var response = ApiResponse<LoginResponse>.Created(loginResponse, "User registered successfully");
-        return StatusCode(response.StatusCode, response);
+        var command = new RegisterCommand(
+            request.FullName,
+            request.Email,
+            request.Password,
+            request.ConfirmPassword,
+            request.PhoneNumber,
+            request.CampusId,
+            request.Role,
+            request.Department,
+            request.Major
+        );
+
+        var response = await _mediator.Send(command);
+        return StatusCode(StatusCodes.Status201Created, response);
     }
 
     /// <summary>
@@ -104,6 +122,41 @@ public class AuthController : ControllerBase
     {
         await _authService.LogoutAsync(_currentUserService.UserId?.ToString() ?? string.Empty);
         var response = ApiResponse<object>.Ok(null, "Logout successful");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Get pending registrations for admin approval
+    /// </summary>
+    /// <returns>List of pending registrations</returns>
+    [HttpGet("pending-registrations")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<List<PendingRegistrationDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<PendingRegistrationDto>>>> GetPendingRegistrations()
+    {
+        var pendingRegistrations = await _mediator.Send(new GetPendingRegistrationsQuery());
+        var response = ApiResponse<List<PendingRegistrationDto>>.Ok(pendingRegistrations, "Pending registrations retrieved successfully");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Approve or reject a registration
+    /// </summary>
+    /// <param name="request">Approval decision</param>
+    /// <returns>Success message</returns>
+    [HttpPost("approve-registration")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<bool>>> ApproveRegistration([FromBody] ApproveRegistrationRequest request)
+    {
+        var command = new ApproveRegistrationCommand(
+            request.UserId,
+            request.IsApproved,
+            request.RejectionReason
+        );
+
+        var response = await _mediator.Send(command);
         return Ok(response);
     }
 }

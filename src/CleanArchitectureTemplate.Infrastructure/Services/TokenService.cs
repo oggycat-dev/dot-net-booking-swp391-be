@@ -20,13 +20,20 @@ public class TokenService : ITokenService
 
     public string GenerateJwtToken(User user)
     {
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Name, user.FullName),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim("role", user.Role.ToString()) // Use lowercase "role" to match JWT config
+            new Claim("role", user.Role.ToString()), // Use lowercase "role" to match JWT config
+            new Claim("userId", user.Id.ToString())
         };
+
+        // Add CampusId if user belongs to a campus
+        if (user.CampusId.HasValue)
+        {
+            claims.Add(new Claim("campusId", user.CampusId.Value.ToString()));
+        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"]!));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
