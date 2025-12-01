@@ -7,6 +7,7 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly ApplicationDbContext _context;
     private IUserRepository? _userRepository;
+    private ICampusRepository? _campusRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -14,6 +15,7 @@ public class UnitOfWork : IUnitOfWork
     }
 
     public IUserRepository Users => _userRepository ??= new UserRepository(_context);
+    public ICampusRepository Campuses => _campusRepository ??= new CampusRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

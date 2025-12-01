@@ -24,7 +24,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
 # Install PostgreSQL client for pg_isready and wait-for-it script
-RUN apt-get update && apt-get install -y postgresql-client netcat-traditional && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y postgresql-client netcat-traditional && rm -rf /var/lib/apt/lists/*
 
 # Copy published app
 COPY --from=build /app/out .

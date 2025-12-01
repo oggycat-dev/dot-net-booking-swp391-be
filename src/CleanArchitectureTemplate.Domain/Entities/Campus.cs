@@ -23,6 +23,16 @@ public class Campus : BaseEntity
     public string Address { get; set; } = string.Empty;
     
     /// <summary>
+    /// Contact phone number
+    /// </summary>
+    public string? ContactPhone { get; set; }
+    
+    /// <summary>
+    /// Contact email address
+    /// </summary>
+    public string? ContactEmail { get; set; }
+    
+    /// <summary>
     /// Campus working hours start time (default: 07:00)
     /// </summary>
     public TimeSpan WorkingHoursStart { get; set; } = new TimeSpan(7, 0, 0);

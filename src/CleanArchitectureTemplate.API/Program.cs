@@ -9,6 +9,10 @@ using CleanArchitectureTemplate.API.Injection;
 using CleanArchitectureTemplate.API.Extensions;
 using Serilog;
 using System.Text.Json;
+using System.IdentityModel.Tokens.Jwt;
+
+// Clear default claim type mappings
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 var builder = WebApplication.CreateBuilder(args);
 

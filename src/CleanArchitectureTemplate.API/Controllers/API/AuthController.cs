@@ -1,13 +1,8 @@
 using CleanArchitectureTemplate.Application.Common.DTOs;
 using CleanArchitectureTemplate.Application.Common.DTOs.Auth;
-using CleanArchitectureTemplate.Application.Common.DTOs.Users;
-using CleanArchitectureTemplate.Application.Features.Users.Commands.CreateUser;
 using CleanArchitectureTemplate.Application.Common.Interfaces;
-using CleanArchitectureTemplate.Domain.Enums;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using UserDto = CleanArchitectureTemplate.Application.Common.DTOs.Users.UserDto;
 
 namespace CleanArchitectureTemplate.API.Controllers.API;
 
@@ -18,55 +13,38 @@ namespace CleanArchitectureTemplate.API.Controllers.API;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IMediator _mediator;
     private readonly IAuthenticationService _authService;
     private readonly ICurrentUserService _currentUserService;
 
     public AuthController(
-        IMediator mediator,
         IAuthenticationService authService,
         ICurrentUserService currentUserService)
     {
-        _mediator = mediator;
         _authService = authService;
         _currentUserService = currentUserService;
     }
 
     /// <summary>
-    /// Register a new user account
+    /// Register a new user account with @fpt.edu.vn email
     /// </summary>
-    /// <param name="request">Registration information</param>
-    /// <returns>Created user information</returns>
+    /// <param name="request">Registration information including campus selection</param>
+    /// <returns>Login response with JWT tokens</returns>
     [HttpPost("register")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<UserDto>>> Register([FromBody] RegisterRequest request)
+    public async Task<ActionResult<ApiResponse<LoginResponse>>> Register([FromBody] RegisterRequest request)
     {
-        var command = new CreateUserCommand
-        {
-            Email = request.Email,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Role = UserRole.Student.ToString() // Default role for registration
-        };
-
-        var result = await _mediator.Send(command);
-        if (result.Success && result.Data != null)
-        {
-            var response = ApiResponse<UserDto>.Created(result.Data, "User registered successfully");
-            return StatusCode(response.StatusCode, response);
-        }
-        
-        var errorResponse = ApiResponse<object>.BadRequest(result.Message, result.Errors);
-        return StatusCode(errorResponse.StatusCode, errorResponse);
+        var loginResponse = await _authService.RegisterAsync(request);
+        var response = ApiResponse<LoginResponse>.Created(loginResponse, "User registered successfully");
+        return StatusCode(response.StatusCode, response);
     }
 
     /// <summary>
-    /// Login to the system
+    /// Login to the system with @fpt.edu.vn email
     /// </summary>
-    /// <param name="request">Login credentials (username is email address)</param>
-    /// <returns>JWT tokens</returns>
+    /// <param name="request">Login credentials (email must be @fpt.edu.vn)</param>
+    /// <returns>JWT tokens and user information</returns>
     [HttpPost("login")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
@@ -91,6 +69,26 @@ public class AuthController : ControllerBase
     {
         var loginResponse = await _authService.RefreshTokenAsync(request);
         var response = ApiResponse<LoginResponse>.Ok(loginResponse, "Token refreshed successfully");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Change current user password
+    /// </summary>
+    /// <param name="request">Current and new password</param>
+    /// <returns>Success message</returns>
+    [HttpPost("change-password")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var userId = _currentUserService.UserId 
+            ?? throw new UnauthorizedAccessException("User not authenticated");
+
+        await _authService.ChangePasswordAsync(userId, request);
+        var response = ApiResponse<object>.Ok(null, "Password changed successfully");
         return Ok(response);
     }
 

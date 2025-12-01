@@ -71,9 +71,7 @@ publish/
 *.ldf
 *.ndf
 
-# Entity Framework Core
-**/Migrations/*.Designer.cs
-**/Migrations/*Snapshot.cs
+
 
 # Environment & Secrets
 .env
