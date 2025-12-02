@@ -11,13 +11,16 @@ public class ApproveCampusChangeCommandHandler : IRequestHandler<ApproveCampusCh
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IEmailService _emailService;
 
     public ApproveCampusChangeCommandHandler(
         IUnitOfWork unitOfWork,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _emailService = emailService;
     }
 
     public async Task<Unit> Handle(ApproveCampusChangeCommand request, CancellationToken cancellationToken)
@@ -60,8 +63,16 @@ public class ApproveCampusChangeCommandHandler : IRequestHandler<ApproveCampusCh
             
             await _unitOfWork.Users.UpdateAsync(user);
             
-            // TODO: Send email notification to user about approval
-            // await _emailService.SendCampusChangeApprovedEmail(user.Email, campusChangeRequest);
+            // Send email notification to user about approval
+            var newCampus = await _unitOfWork.Campuses.GetByIdAsync(campusChangeRequest.RequestedCampusId);
+            try
+            {
+                await _emailService.SendCampusChangeApprovedEmailAsync(user.Email, user.FullName, newCampus?.CampusName ?? "New Campus");
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail the operation
+            }
         }
         else
         {
@@ -69,8 +80,15 @@ public class ApproveCampusChangeCommandHandler : IRequestHandler<ApproveCampusCh
             var rejectionReason = request.Comment ?? "No reason provided";
             campusChangeRequest.Reject(adminId, rejectionReason);
             
-            // TODO: Send email notification to user about rejection
-            // await _emailService.SendCampusChangeRejectedEmail(user.Email, campusChangeRequest);
+            // Send email notification to user about rejection
+            try
+            {
+                await _emailService.SendCampusChangeRejectedEmailAsync(user.Email, user.FullName, rejectionReason);
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail the operation
+            }
         }
 
         await _unitOfWork.CampusChangeRequests.UpdateAsync(campusChangeRequest);

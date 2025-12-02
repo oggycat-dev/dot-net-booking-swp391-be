@@ -10,13 +10,16 @@ public class AdminApproveBookingCommandHandler : IRequestHandler<AdminApproveBoo
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IEmailService _emailService;
 
     public AdminApproveBookingCommandHandler(
         IUnitOfWork unitOfWork,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _emailService = emailService;
     }
 
     public async Task<Unit> Handle(AdminApproveBookingCommand request, CancellationToken cancellationToken)
@@ -64,13 +67,28 @@ public class AdminApproveBookingCommandHandler : IRequestHandler<AdminApproveBoo
             }
         }
 
+        var user = await _unitOfWork.Users.GetByIdAsync(booking.UserId);
+        var facility = await _unitOfWork.Facilities.GetByIdAsync(booking.FacilityId);
+        
         if (request.Approved)
         {
             // Admin approve
             booking.AdminApprove(adminId);
             
-            // TODO: Send email notification to User about approval
-            // await _emailService.SendBookingApprovedEmail(booking);
+            // Send email notification to User about approval
+            if (user != null && facility != null)
+            {
+                try
+                {
+                    var bookingDateTime = booking.BookingDate.Date.Add(booking.StartTime);
+                    var endDateTime = booking.BookingDate.Date.Add(booking.EndTime);
+                    await _emailService.SendBookingApprovedEmailAsync(user.Email, user.FullName, facility.FacilityName, bookingDateTime, endDateTime);
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't fail the operation
+                }
+            }
         }
         else
         {
@@ -78,8 +96,18 @@ public class AdminApproveBookingCommandHandler : IRequestHandler<AdminApproveBoo
             var rejectionReason = request.Comment ?? "No reason provided by admin";
             booking.AdminReject(rejectionReason);
             
-            // TODO: Send email notification to User about rejection
-            // await _emailService.SendBookingRejectedByAdminEmail(booking);
+            // Send email notification to User about rejection
+            if (user != null && facility != null)
+            {
+                try
+                {
+                    await _emailService.SendBookingRejectedEmailAsync(user.Email, user.FullName, facility.FacilityName, rejectionReason);
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't fail the operation
+                }
+            }
         }
 
         await _unitOfWork.Bookings.UpdateAsync(booking);

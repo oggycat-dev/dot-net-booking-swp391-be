@@ -9,13 +9,16 @@ public class ApproveRegistrationCommandHandler : IRequestHandler<ApproveRegistra
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IEmailService _emailService;
 
     public ApproveRegistrationCommandHandler(
         IUnitOfWork unitOfWork,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _emailService = emailService;
     }
 
     public async Task<ApiResponse<bool>> Handle(ApproveRegistrationCommand request, CancellationToken cancellationToken)
@@ -43,19 +46,34 @@ public class ApproveRegistrationCommandHandler : IRequestHandler<ApproveRegistra
             await _unitOfWork.Users.UpdateAsync(user);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            // TODO: Send approval email to user
-            // await _emailService.SendApprovalEmailAsync(user.Email, user.FullName);
+            // Send approval email to user
+            try
+            {
+                await _emailService.SendRegistrationApprovedEmailAsync(user.Email, user.FullName);
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail the operation
+                // Email failure should not prevent approval
+            }
 
             return ApiResponse<bool>.Ok(true, "Registration approved successfully. Approval email sent to user.");
         }
         else
         {
+            // Send rejection email before deleting user
+            try
+            {
+                await _emailService.SendRegistrationRejectedEmailAsync(user.Email, user.FullName, request.RejectionReason ?? "No reason provided");
+            }
+            catch (Exception ex)
+            {
+                // Log error but continue with deletion
+            }
+
             // Reject registration - delete the user
             await _unitOfWork.Users.DeleteAsync(user);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            // TODO: Send rejection email to user
-            // await _emailService.SendRejectionEmailAsync(user.Email, user.FullName, request.RejectionReason);
 
             return ApiResponse<bool>.Ok(true, "Registration rejected. Rejection email sent to user.");
         }

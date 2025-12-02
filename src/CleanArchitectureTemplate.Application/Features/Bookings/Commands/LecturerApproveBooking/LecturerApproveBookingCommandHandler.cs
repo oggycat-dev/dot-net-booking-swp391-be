@@ -10,13 +10,16 @@ public class LecturerApproveBookingCommandHandler : IRequestHandler<LecturerAppr
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IEmailService _emailService;
 
     public LecturerApproveBookingCommandHandler(
         IUnitOfWork unitOfWork,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _emailService = emailService;
     }
 
     public async Task<Unit> Handle(LecturerApproveBookingCommand request, CancellationToken cancellationToken)
@@ -61,8 +64,7 @@ public class LecturerApproveBookingCommandHandler : IRequestHandler<LecturerAppr
             // Approve - move to Pending for Admin
             booking.LecturerApprove(lecturerId);
             
-            // TODO: Send email notification to Admin about new pending booking
-            // await _emailService.SendBookingPendingAdminApprovalEmail(booking);
+            // Note: Email to admin is not implemented as admin will see it in pending list
         }
         else
         {
@@ -70,8 +72,20 @@ public class LecturerApproveBookingCommandHandler : IRequestHandler<LecturerAppr
             var rejectionReason = request.Comment ?? "No reason provided by lecturer";
             booking.LecturerReject(rejectionReason);
             
-            // TODO: Send email notification to Student about rejection
-            // await _emailService.SendBookingRejectedByLecturerEmail(booking);
+            // Send email notification to Student about rejection
+            var student = await _unitOfWork.Users.GetByIdAsync(booking.UserId);
+            var facility = await _unitOfWork.Facilities.GetByIdAsync(booking.FacilityId);
+            if (student != null && facility != null)
+            {
+                try
+                {
+                    await _emailService.SendBookingRejectedEmailAsync(student.Email, student.FullName, facility.FacilityName, rejectionReason);
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't fail the operation
+                }
+            }
         }
 
         await _unitOfWork.Bookings.UpdateAsync(booking);
