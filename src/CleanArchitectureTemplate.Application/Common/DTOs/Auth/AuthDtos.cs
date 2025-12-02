@@ -40,8 +40,8 @@ public record RegisterRequest(
     
     [Required(ErrorMessage = "Password is required")]
     [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
-    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]", 
-        ErrorMessage = "Password must contain uppercase, lowercase, number and special character")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$", 
+        ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character (@$!%*?&#)")]
     string Password,
     
     [Required(ErrorMessage = "Confirm password is required")]
@@ -100,7 +100,7 @@ public record ChangePasswordRequest(
     
     [Required(ErrorMessage = "New password is required")]
     [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
-    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]", 
-        ErrorMessage = "Password must contain uppercase, lowercase, number and special character")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$", 
+        ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character (@$!%*?&#)")]
     string NewPassword
 );

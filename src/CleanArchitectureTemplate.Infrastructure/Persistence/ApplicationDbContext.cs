@@ -22,6 +22,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     // DbSets
     public DbSet<User> Users => Set<User>();
     public DbSet<Campus> Campuses => Set<Campus>();
+    public DbSet<CampusChangeRequest> CampusChangeRequests => Set<CampusChangeRequest>();
     public DbSet<Holiday> Holidays => Set<Holiday>();
     public DbSet<FacilityType> FacilityTypes => Set<FacilityType>();
     public DbSet<Facility> Facilities => Set<Facility>();
@@ -57,6 +58,40 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 .WithOne(e => e.Campus)
                 .HasForeignKey(e => e.CampusId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ===== CampusChangeRequest Configuration =====
+        builder.Entity<CampusChangeRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Reason).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Status).IsRequired();
+            entity.Property(e => e.ReviewComment).HasMaxLength(500);
+            
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.CreatedAt);
+            
+            // Relationships
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.CurrentCampus)
+                .WithMany()
+                .HasForeignKey(e => e.CurrentCampusId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.RequestedCampus)
+                .WithMany()
+                .HasForeignKey(e => e.RequestedCampusId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.ReviewedByAdmin)
+                .WithMany()
+                .HasForeignKey(e => e.ReviewedBy)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // ===== Holiday Configuration =====
@@ -168,7 +203,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.Property(e => e.NumParticipants).IsRequired();
             entity.Property(e => e.EquipmentNeeded).HasMaxLength(500);
             entity.Property(e => e.Note).HasMaxLength(1000);
-            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(30);
+            entity.Property(e => e.LecturerEmail).HasMaxLength(100);
+            entity.Property(e => e.LecturerRejectReason).HasMaxLength(500);
             entity.Property(e => e.RejectReason).HasMaxLength(500);
             entity.Property(e => e.Rating).HasPrecision(2, 1);
             entity.Property(e => e.Comment).HasMaxLength(1000);
@@ -177,9 +214,16 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.HasIndex(e => e.BookingCode).IsUnique();
             entity.HasIndex(e => e.BookingDate);
             entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.LecturerEmail);
             entity.HasIndex(e => new { e.FacilityId, e.BookingDate });
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => new { e.FacilityId, e.BookingDate, e.StartTime, e.EndTime });
+            
+            // Relationships - Lecturer approver
+            entity.HasOne(e => e.LecturerApprover)
+                .WithMany()
+                .HasForeignKey(e => e.LecturerApprovedBy)
+                .OnDelete(DeleteBehavior.SetNull);
             
             // Relationships - Check-in performer
             entity.HasOne(e => e.CheckInPerformer)

@@ -1,0 +1,160 @@
+using CleanArchitectureTemplate.Application.Common.DTOs;
+using CleanArchitectureTemplate.Application.Common.DTOs.Booking;
+using CleanArchitectureTemplate.Application.Features.Bookings.Commands.AdminApproveBooking;
+using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CreateBooking;
+using CleanArchitectureTemplate.Application.Features.Bookings.Commands.LecturerApproveBooking;
+using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetPendingAdminApprovals;
+using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetPendingLecturerApprovals;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace CleanArchitectureTemplate.API.Controllers.API;
+
+/// <summary>
+/// Booking management controller
+/// </summary>
+[ApiController]
+[Route("api/bookings")]
+[Authorize]
+public class BookingController : ControllerBase
+{
+    private readonly IMediator _mediator;
+
+    public BookingController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    /// <summary>
+    /// Create a new booking (Student/Lecturer)
+    /// </summary>
+    /// <param name="request">Booking creation request</param>
+    /// <returns>Created booking</returns>
+    [HttpPost]
+    [Authorize(Roles = "Student,Lecturer")]
+    [ProducesResponseType(typeof(ApiResponse<BookingDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<BookingDto>>> CreateBooking(
+        [FromBody] CreateBookingRequest request)
+    {
+        var command = new CreateBookingCommand
+        {
+            FacilityId = request.FacilityId,
+            BookingDate = request.BookingDate,
+            StartTime = request.StartTime,
+            EndTime = request.EndTime,
+            Purpose = request.Purpose,
+            NumParticipants = request.NumParticipants,
+            EquipmentNeeded = request.EquipmentNeeded,
+            Note = request.Note,
+            LecturerEmail = request.LecturerEmail
+        };
+
+        var result = await _mediator.Send(command);
+        var response = ApiResponse<BookingDto>.Created(result, "Booking created successfully");
+        return StatusCode(response.StatusCode, response);
+    }
+
+    /// <summary>
+    /// Get bookings waiting for lecturer approval (Lecturer only)
+    /// </summary>
+    /// <returns>List of bookings waiting for lecturer approval</returns>
+    [HttpGet("pending-lecturer-approval")]
+    [Authorize(Roles = "Lecturer")]
+    [ProducesResponseType(typeof(ApiResponse<List<BookingListDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<List<BookingListDto>>>> GetPendingLecturerApprovals()
+    {
+        var bookings = await _mediator.Send(new GetPendingLecturerApprovalsQuery());
+        var response = ApiResponse<List<BookingListDto>>.Ok(bookings, "Pending bookings retrieved successfully");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Lecturer approve or reject student booking (Lecturer only)
+    /// </summary>
+    /// <param name="bookingId">Booking ID</param>
+    /// <param name="request">Approval decision</param>
+    /// <returns>Success message</returns>
+    [HttpPost("{bookingId}/lecturer-approve")]
+    [Authorize(Roles = "Lecturer")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<object>>> LecturerApproveBooking(
+        Guid bookingId,
+        [FromBody] ApproveBookingRequest request)
+    {
+        var command = new LecturerApproveBookingCommand
+        {
+            BookingId = bookingId,
+            Approved = request.Approved,
+            Comment = request.Comment
+        };
+
+        await _mediator.Send(command);
+
+        var message = request.Approved 
+            ? "Booking approved by lecturer and sent to admin for final approval" 
+            : "Booking rejected by lecturer";
+
+        var response = ApiResponse<object>.Ok(null, message);
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Get bookings waiting for admin approval (Admin only)
+    /// </summary>
+    /// <returns>List of bookings waiting for admin approval</returns>
+    [HttpGet("pending-admin-approval")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<List<BookingListDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<List<BookingListDto>>>> GetPendingAdminApprovals()
+    {
+        var bookings = await _mediator.Send(new GetPendingAdminApprovalsQuery());
+        var response = ApiResponse<List<BookingListDto>>.Ok(bookings, "Pending bookings retrieved successfully");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Admin approve or reject booking (Admin only)
+    /// </summary>
+    /// <param name="bookingId">Booking ID</param>
+    /// <param name="request">Approval decision</param>
+    /// <returns>Success message</returns>
+    [HttpPost("{bookingId}/admin-approve")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<object>>> AdminApproveBooking(
+        Guid bookingId,
+        [FromBody] ApproveBookingRequest request)
+    {
+        var command = new AdminApproveBookingCommand
+        {
+            BookingId = bookingId,
+            Approved = request.Approved,
+            Comment = request.Comment
+        };
+
+        await _mediator.Send(command);
+
+        var message = request.Approved 
+            ? "Booking approved successfully" 
+            : "Booking rejected";
+
+        var response = ApiResponse<object>.Ok(null, message);
+        return Ok(response);
+    }
+}

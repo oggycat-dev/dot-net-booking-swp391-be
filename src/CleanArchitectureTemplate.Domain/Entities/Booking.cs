@@ -71,9 +71,35 @@ public class Booking : BaseEntity
     /// <summary>
     /// Current status of the booking
     /// </summary>
-    public BookingStatus Status { get; set; } = BookingStatus.Pending;
+    public BookingStatus Status { get; set; } = BookingStatus.WaitingLecturerApproval;
     
-    // Approval fields
+    // Lecturer approval fields (for Student bookings only)
+    /// <summary>
+    /// Lecturer email for Student bookings (required for students)
+    /// </summary>
+    public string? LecturerEmail { get; set; }
+    
+    /// <summary>
+    /// Foreign key to Lecturer who approved the student booking
+    /// </summary>
+    public Guid? LecturerApprovedBy { get; set; }
+    
+    /// <summary>
+    /// Lecturer who approved the booking navigation property
+    /// </summary>
+    public User? LecturerApprover { get; set; }
+    
+    /// <summary>
+    /// Timestamp when lecturer approved the booking
+    /// </summary>
+    public DateTime? LecturerApprovedAt { get; set; }
+    
+    /// <summary>
+    /// Reason for lecturer rejection (if rejected by lecturer)
+    /// </summary>
+    public string? LecturerRejectReason { get; set; }
+    
+    // Admin approval fields
     /// <summary>
     /// Foreign key to User who approved the booking (admin)
     /// </summary>
@@ -85,7 +111,7 @@ public class Booking : BaseEntity
     public User? Approver { get; set; }
     
     /// <summary>
-    /// Timestamp when booking was approved
+    /// Timestamp when booking was approved by admin
     /// </summary>
     public DateTime? ApprovedAt { get; set; }
     
@@ -199,21 +225,43 @@ public class Booking : BaseEntity
     }
     
     /// <summary>
-    /// Approve booking
+    /// Lecturer approve booking (for Student bookings)
     /// </summary>
-    public void Approve(Guid approvedByUserId)
+    public void LecturerApprove(Guid lecturerUserId)
+    {
+        Status = BookingStatus.Pending; // Move to Pending for Admin review
+        LecturerApprovedBy = lecturerUserId;
+        LecturerApprovedAt = DateTime.UtcNow;
+        LecturerRejectReason = null;
+        this.MarkAsModified();
+    }
+    
+    /// <summary>
+    /// Lecturer reject booking (for Student bookings)
+    /// </summary>
+    public void LecturerReject(string reason)
+    {
+        Status = BookingStatus.Rejected;
+        LecturerRejectReason = reason;
+        this.MarkAsModified();
+    }
+    
+    /// <summary>
+    /// Admin approve booking
+    /// </summary>
+    public void AdminApprove(Guid adminUserId)
     {
         Status = BookingStatus.Approved;
-        ApprovedBy = approvedByUserId;
+        ApprovedBy = adminUserId;
         ApprovedAt = DateTime.UtcNow;
         RejectReason = null;
         this.MarkAsModified();
     }
     
     /// <summary>
-    /// Reject booking
+    /// Admin reject booking
     /// </summary>
-    public void Reject(string reason)
+    public void AdminReject(string reason)
     {
         Status = BookingStatus.Rejected;
         RejectReason = reason;

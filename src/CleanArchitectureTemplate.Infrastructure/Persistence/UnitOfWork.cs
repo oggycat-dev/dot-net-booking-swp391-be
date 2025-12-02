@@ -10,6 +10,8 @@ public class UnitOfWork : IUnitOfWork
     private ICampusRepository? _campusRepository;
     private IFacilityRepository? _facilityRepository;
     private IFacilityTypeRepository? _facilityTypeRepository;
+    private ICampusChangeRequestRepository? _campusChangeRequestRepository;
+    private IBookingRepository? _bookingRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -20,6 +22,8 @@ public class UnitOfWork : IUnitOfWork
     public ICampusRepository Campuses => _campusRepository ??= new CampusRepository(_context);
     public IFacilityRepository Facilities => _facilityRepository ??= new FacilityRepository(_context);
     public IFacilityTypeRepository FacilityTypes => _facilityTypeRepository ??= new FacilityTypeRepository(_context);
+    public ICampusChangeRequestRepository CampusChangeRequests => _campusChangeRequestRepository ??= new CampusChangeRequestRepository(_context);
+    public IBookingRepository Bookings => _bookingRepository ??= new BookingRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

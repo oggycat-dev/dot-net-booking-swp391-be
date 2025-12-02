@@ -18,11 +18,28 @@ public interface ICampusRepository : IRepository<Campus>
     Task<List<Campus>> GetActiveCampusesAsync();
 }
 
+public interface ICampusChangeRequestRepository : IRepository<CampusChangeRequest>
+{
+    Task<List<CampusChangeRequest>> GetPendingRequestsAsync();
+    Task<List<CampusChangeRequest>> GetByUserIdAsync(Guid userId);
+    Task<bool> HasPendingRequestAsync(Guid userId);
+}
+
+public interface IBookingRepository : IRepository<Booking>
+{
+    Task<List<Booking>> GetWaitingLecturerApprovalByEmailAsync(string lecturerEmail);
+    Task<List<Booking>> GetPendingAdminApprovalsAsync();
+    Task<List<Booking>> GetByUserIdAsync(Guid userId);
+    Task<bool> HasConflictAsync(Guid facilityId, DateTime bookingDate, TimeSpan startTime, TimeSpan endTime, Guid? excludeBookingId = null);
+}
+
 public interface IUnitOfWork : IDisposable
 {
     IUserRepository Users { get; }
     ICampusRepository Campuses { get; }
     IFacilityRepository Facilities { get; }
     IFacilityTypeRepository FacilityTypes { get; }
+    ICampusChangeRequestRepository CampusChangeRequests { get; }
+    IBookingRepository Bookings { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

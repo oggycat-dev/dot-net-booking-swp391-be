@@ -29,6 +29,7 @@ public class AdminAccountInitializer : IHostedService
         // Check if admin exists
         var adminEmail = _configuration["Admin:Email"] ?? "admin@fpt.edu.vn";
         var existingAdmin = await unitOfWork.Users.GetByEmailAsync(adminEmail);
+        var adminPassword = _configuration["Admin:Password"] ?? "Admin@123456";
         
         if (existingAdmin == null)
         {
@@ -47,11 +48,50 @@ public class AdminAccountInitializer : IHostedService
             };
             
             // Hash the admin password using BCrypt
-            var adminPassword = _configuration["Admin:Password"] ?? "Admin@123456";
             admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
 
             await unitOfWork.Users.AddAsync(admin);
             await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        else
+        {
+            // Update admin account to ensure it's properly configured
+            bool needsUpdate = false;
+            
+            // Always rehash password to ensure it's valid BCrypt format
+            var newPasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
+            if (existingAdmin.PasswordHash != newPasswordHash)
+            {
+                existingAdmin.PasswordHash = newPasswordHash;
+                needsUpdate = true;
+            }
+            
+            // Ensure admin is approved and active
+            if (!existingAdmin.IsApproved)
+            {
+                existingAdmin.IsApproved = true;
+                needsUpdate = true;
+            }
+            
+            if (!existingAdmin.IsActive)
+            {
+                existingAdmin.IsActive = true;
+                needsUpdate = true;
+            }
+            
+            if (existingAdmin.IsBlocked)
+            {
+                existingAdmin.IsBlocked = false;
+                existingAdmin.BlockedUntil = null;
+                existingAdmin.BlockedReason = null;
+                needsUpdate = true;
+            }
+            
+            if (needsUpdate)
+            {
+                await unitOfWork.Users.UpdateAsync(existingAdmin);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+            }
         }
     }
 

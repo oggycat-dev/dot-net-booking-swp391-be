@@ -27,24 +27,24 @@ public enum UserRole
 public enum BookingStatus
 {
     /// <summary>
-    /// Booking request submitted, waiting for approval
+    /// Student booking - waiting for Lecturer approval
     /// </summary>
-    Pending = 0,
+    WaitingLecturerApproval = 0,
+    
+    /// <summary>
+    /// Lecturer booking or Lecturer-approved Student booking - waiting for Admin approval
+    /// </summary>
+    Pending = 1,
     
     /// <summary>
     /// Booking approved by admin
     /// </summary>
-    Approved = 1,
+    Approved = 2,
     
     /// <summary>
-    /// Booking rejected by admin
+    /// Booking rejected (by lecturer or admin)
     /// </summary>
-    Rejected = 2,
-    
-    /// <summary>
-    /// User confirmed the approved booking
-    /// </summary>
-    Confirmed = 3,
+    Rejected = 3,
     
     /// <summary>
     /// Currently in use (checked in)
