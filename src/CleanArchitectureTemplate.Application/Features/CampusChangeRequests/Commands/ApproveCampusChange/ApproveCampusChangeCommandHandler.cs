@@ -69,7 +69,7 @@ public class ApproveCampusChangeCommandHandler : IRequestHandler<ApproveCampusCh
             {
                 await _emailService.SendCampusChangeApprovedEmailAsync(user.Email, user.FullName, newCampus?.CampusName ?? "New Campus");
             }
-            catch (Exception ex)
+            catch
             {
                 // Log error but don't fail the operation
             }
@@ -85,7 +85,7 @@ public class ApproveCampusChangeCommandHandler : IRequestHandler<ApproveCampusCh
             {
                 await _emailService.SendCampusChangeRejectedEmailAsync(user.Email, user.FullName, rejectionReason);
             }
-            catch (Exception ex)
+            catch
             {
                 // Log error but don't fail the operation
             }

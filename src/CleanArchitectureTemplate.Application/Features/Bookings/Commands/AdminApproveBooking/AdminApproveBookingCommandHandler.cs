@@ -84,7 +84,7 @@ public class AdminApproveBookingCommandHandler : IRequestHandler<AdminApproveBoo
                     var endDateTime = booking.BookingDate.Date.Add(booking.EndTime);
                     await _emailService.SendBookingApprovedEmailAsync(user.Email, user.FullName, facility.FacilityName, bookingDateTime, endDateTime);
                 }
-                catch (Exception ex)
+                catch
                 {
                     // Log error but don't fail the operation
                 }
@@ -103,7 +103,7 @@ public class AdminApproveBookingCommandHandler : IRequestHandler<AdminApproveBoo
                 {
                     await _emailService.SendBookingRejectedEmailAsync(user.Email, user.FullName, facility.FacilityName, rejectionReason);
                 }
-                catch (Exception ex)
+                catch
                 {
                     // Log error but don't fail the operation
                 }

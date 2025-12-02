@@ -51,7 +51,7 @@ public class ApproveRegistrationCommandHandler : IRequestHandler<ApproveRegistra
             {
                 await _emailService.SendRegistrationApprovedEmailAsync(user.Email, user.FullName);
             }
-            catch (Exception ex)
+            catch
             {
                 // Log error but don't fail the operation
                 // Email failure should not prevent approval
@@ -66,7 +66,7 @@ public class ApproveRegistrationCommandHandler : IRequestHandler<ApproveRegistra
             {
                 await _emailService.SendRegistrationRejectedEmailAsync(user.Email, user.FullName, request.RejectionReason ?? "No reason provided");
             }
-            catch (Exception ex)
+            catch
             {
                 // Log error but continue with deletion
             }

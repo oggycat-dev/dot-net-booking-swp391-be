@@ -81,7 +81,7 @@ public class LecturerApproveBookingCommandHandler : IRequestHandler<LecturerAppr
                 {
                     await _emailService.SendBookingRejectedEmailAsync(student.Email, student.FullName, facility.FacilityName, rejectionReason);
                 }
-                catch (Exception ex)
+                catch
                 {
                     // Log error but don't fail the operation
                 }

@@ -4,6 +4,9 @@ using CleanArchitectureTemplate.Application.Common.Models;
 using CleanArchitectureTemplate.Application.Features.Users.Commands.CreateUser;
 using CleanArchitectureTemplate.Application.Features.Users.Commands.DeleteUser;
 using CleanArchitectureTemplate.Application.Features.Users.Commands.UpdateUser;
+using CleanArchitectureTemplate.Application.Features.Users.Commands.BlockUser;
+using CleanArchitectureTemplate.Application.Features.Users.Commands.UnblockUser;
+using CleanArchitectureTemplate.Application.Features.Users.Commands.ResetPassword;
 using CleanArchitectureTemplate.Application.Features.Users.Queries.GetUserById;
 using CleanArchitectureTemplate.Application.Features.Users.Queries.GetUsers;
 using CleanArchitectureTemplate.Domain.Enums;
@@ -124,6 +127,74 @@ public class UsersController : ControllerBase
     {
         await _mediator.Send(new DeleteUserCommand(id));
         var response = ApiResponse<object>.Ok(null, "User deleted successfully");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Block a user
+    /// </summary>
+    /// <param name="id">User ID</param>
+    /// <param name="command">Block information</param>
+    /// <returns>Success message</returns>
+    [HttpPost("{id}/block")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<object>>> BlockUser(Guid id, [FromBody] BlockUserCommand command)
+    {
+        if (id != command.UserId)
+        {
+            var errorResponse = ApiResponse<object>.BadRequest("User ID in URL does not match the ID in request body");
+            return StatusCode(errorResponse.StatusCode, errorResponse);
+        }
+
+        await _mediator.Send(command);
+        var response = ApiResponse<object>.Ok(null, "User blocked successfully");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Unblock a user
+    /// </summary>
+    /// <param name="id">User ID</param>
+    /// <returns>Success message</returns>
+    [HttpPost("{id}/unblock")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<object>>> UnblockUser(Guid id)
+    {
+        await _mediator.Send(new UnblockUserCommand(id));
+        var response = ApiResponse<object>.Ok(null, "User unblocked successfully");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Reset user password (Admin only)
+    /// </summary>
+    /// <param name="id">User ID</param>
+    /// <param name="command">Reset password information</param>
+    /// <returns>Success message</returns>
+    [HttpPost("{id}/reset-password")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<object>>> ResetPassword(Guid id, [FromBody] ResetPasswordCommand command)
+    {
+        if (id != command.UserId)
+        {
+            var errorResponse = ApiResponse<object>.BadRequest("User ID in URL does not match the ID in request body");
+            return StatusCode(errorResponse.StatusCode, errorResponse);
+        }
+
+        await _mediator.Send(command);
+        var response = ApiResponse<object>.Ok(null, "Password reset successfully");
         return Ok(response);
     }
 }
