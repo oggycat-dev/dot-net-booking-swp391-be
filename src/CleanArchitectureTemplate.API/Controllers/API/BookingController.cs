@@ -3,6 +3,8 @@ using CleanArchitectureTemplate.Application.Common.DTOs.Booking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.AdminApproveBooking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CreateBooking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.LecturerApproveBooking;
+using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetMyBookingHistory;
+using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetMyPendingBookings;
 using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetPendingAdminApprovals;
 using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetPendingLecturerApprovals;
 using MediatR;
@@ -56,6 +58,38 @@ public class BookingController : ControllerBase
         var result = await _mediator.Send(command);
         var response = ApiResponse<BookingDto>.Created(result, "Booking created successfully");
         return StatusCode(response.StatusCode, response);
+    }
+
+    /// <summary>
+    /// Get my pending bookings (Student/Lecturer)
+    /// </summary>
+    /// <returns>List of my bookings that are pending approval</returns>
+    [HttpGet("my-pending")]
+    [Authorize(Roles = "Student,Lecturer")]
+    [ProducesResponseType(typeof(ApiResponse<List<BookingDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<List<BookingDto>>>> GetMyPendingBookings()
+    {
+        var bookings = await _mediator.Send(new GetMyPendingBookingsQuery());
+        var response = ApiResponse<List<BookingDto>>.Ok(bookings, "My pending bookings retrieved successfully");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Get my booking history (Student/Lecturer)
+    /// </summary>
+    /// <returns>List of all my bookings</returns>
+    [HttpGet("my-history")]
+    [Authorize(Roles = "Student,Lecturer")]
+    [ProducesResponseType(typeof(ApiResponse<List<BookingDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<List<BookingDto>>>> GetMyBookingHistory()
+    {
+        var bookings = await _mediator.Send(new GetMyBookingHistoryQuery());
+        var response = ApiResponse<List<BookingDto>>.Ok(bookings, "My booking history retrieved successfully");
+        return Ok(response);
     }
 
     /// <summary>

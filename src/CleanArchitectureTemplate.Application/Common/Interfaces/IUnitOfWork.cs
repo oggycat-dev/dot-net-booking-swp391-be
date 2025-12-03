@@ -30,6 +30,7 @@ public interface IBookingRepository : IRepository<Booking>
     Task<List<Booking>> GetWaitingLecturerApprovalByEmailAsync(string lecturerEmail);
     Task<List<Booking>> GetPendingAdminApprovalsAsync();
     Task<List<Booking>> GetByUserIdAsync(Guid userId);
+    Task<List<Booking>> GetMyPendingBookingsAsync(Guid userId);
     Task<bool> HasConflictAsync(Guid facilityId, DateTime bookingDate, TimeSpan startTime, TimeSpan endTime, Guid? excludeBookingId = null);
 }
 

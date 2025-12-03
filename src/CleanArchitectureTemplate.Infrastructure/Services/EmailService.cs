@@ -202,4 +202,25 @@ public class EmailService : IEmailService
         
         await SendEmailAsync(to, subject, body);
     }
+
+    public async Task SendPasswordResetCodeEmailAsync(string to, string fullName, string verificationCode)
+    {
+        var subject = "Password Reset Verification Code";
+        var body = $@"
+            <html>
+            <body style='font-family: Arial, sans-serif;'>
+                <h2>Password Reset Request</h2>
+                <p>Dear {fullName},</p>
+                <p>You have requested to reset your password.</p>
+                <p>Your verification code is:</p>
+                <h1 style='color: #007bff; letter-spacing: 5px; font-size: 32px;'>{verificationCode}</h1>
+                <p><strong>This code will expire in 15 minutes.</strong></p>
+                <p>If you did not request this password reset, please ignore this email.</p>
+                <p>Best regards,<br>FPT Booking System</p>
+            </body>
+            </html>
+        ";
+        
+        await SendEmailAsync(to, subject, body);
+    }
 }

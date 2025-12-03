@@ -45,14 +45,16 @@ public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand,
         }
 
         // Validate booking date is not in the past
-        if (request.BookingDate.Date < DateTime.UtcNow.Date)
+        var today = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
+        if (request.BookingDate.Date < today)
         {
             throw new ValidationException("Cannot book facilities for past dates");
         }
 
         // Validate booking date is within allowed range based on role
         var maxDaysAhead = user.GetMaxBookingDaysAhead();
-        if (request.BookingDate.Date > DateTime.UtcNow.Date.AddDays(maxDaysAhead))
+        var maxDate = DateTime.SpecifyKind(DateTime.UtcNow.Date.AddDays(maxDaysAhead), DateTimeKind.Utc);
+        if (request.BookingDate.Date > maxDate)
         {
             throw new ValidationException($"{user.Role} can only book up to {maxDaysAhead} days in advance");
         }
@@ -101,7 +103,7 @@ public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand,
             BookingCode = Booking.GenerateBookingCode(request.BookingDate),
             FacilityId = request.FacilityId,
             UserId = userId,
-            BookingDate = request.BookingDate.Date,
+            BookingDate = DateTime.SpecifyKind(request.BookingDate.Date, DateTimeKind.Utc),
             StartTime = request.StartTime,
             EndTime = request.EndTime,
             Purpose = request.Purpose,

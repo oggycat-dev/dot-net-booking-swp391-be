@@ -50,11 +50,30 @@ public class BookingRepository : Repository<Booking>, IBookingRepository
             .ToListAsync();
     }
 
+    public async Task<List<Booking>> GetMyPendingBookingsAsync(Guid userId)
+    {
+        return await _context.Bookings
+            .Include(b => b.Facility)
+                .ThenInclude(f => f.Campus)
+            .Include(b => b.LecturerApprover)
+            .Include(b => b.Approver)
+            .Where(b => b.UserId == userId && 
+                       (b.Status == BookingStatus.WaitingLecturerApproval || 
+                        b.Status == BookingStatus.Pending) && 
+                       !b.IsDeleted)
+            .OrderBy(b => b.BookingDate)
+                .ThenBy(b => b.StartTime)
+            .ToListAsync();
+    }
+
     public async Task<bool> HasConflictAsync(Guid facilityId, DateTime bookingDate, TimeSpan startTime, TimeSpan endTime, Guid? excludeBookingId = null)
     {
+        // Ensure bookingDate is UTC for PostgreSQL comparison
+        var dateOnly = DateTime.SpecifyKind(bookingDate.Date, DateTimeKind.Utc);
+        
         var query = _context.Bookings
             .Where(b => b.FacilityId == facilityId &&
-                       b.BookingDate.Date == bookingDate.Date &&
+                       b.BookingDate == dateOnly &&
                        b.Status != BookingStatus.Rejected &&
                        b.Status != BookingStatus.Cancelled &&
                        !b.IsDeleted);

@@ -104,3 +104,28 @@ public record ChangePasswordRequest(
         ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character (@$!%*?&#)")]
     string NewPassword
 );
+
+public record ForgotPasswordRequest(
+    [Required(ErrorMessage = "Email is required")]
+    [EmailAddress(ErrorMessage = "Invalid email format")]
+    [RegularExpression(@"^[a-zA-Z0-9._%+-]+@fpt\.edu\.vn$", ErrorMessage = "Email must be @fpt.edu.vn domain")]
+    string Email
+);
+
+public record ResetPasswordRequest(
+    [Required(ErrorMessage = "Email is required")]
+    [EmailAddress(ErrorMessage = "Invalid email format")]
+    [RegularExpression(@"^[a-zA-Z0-9._%+-]+@fpt\.edu\.vn$", ErrorMessage = "Email must be @fpt.edu.vn domain")]
+    string Email,
+    
+    [Required(ErrorMessage = "Verification code is required")]
+    [StringLength(6, MinimumLength = 6, ErrorMessage = "Verification code must be 6 digits")]
+    [RegularExpression(@"^\d{6}$", ErrorMessage = "Verification code must be 6 digits")]
+    string VerificationCode,
+    
+    [Required(ErrorMessage = "New password is required")]
+    [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$", 
+        ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character (@$!%*?&#)")]
+    string NewPassword
+);

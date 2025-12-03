@@ -348,6 +348,33 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             }
         }
 
+        // Fix all DateTime properties to UTC for PostgreSQL
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            {
+                foreach (var property in entry.Properties)
+                {
+                    if (property.Metadata.ClrType == typeof(DateTime) && property.CurrentValue != null)
+                    {
+                        var dateTime = (DateTime)property.CurrentValue;
+                        if (dateTime.Kind == DateTimeKind.Unspecified)
+                        {
+                            property.CurrentValue = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+                        }
+                    }
+                    else if (property.Metadata.ClrType == typeof(DateTime?) && property.CurrentValue != null)
+                    {
+                        var dateTime = (DateTime)property.CurrentValue;
+                        if (dateTime.Kind == DateTimeKind.Unspecified)
+                        {
+                            property.CurrentValue = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+                        }
+                    }
+                }
+            }
+        }
+
         return await base.SaveChangesAsync(cancellationToken);
     }
 }

@@ -3,6 +3,8 @@ using CleanArchitectureTemplate.Application.Common.DTOs.Auth;
 using CleanArchitectureTemplate.Application.Common.Interfaces;
 using CleanArchitectureTemplate.Application.Features.Auth.Commands.Register;
 using CleanArchitectureTemplate.Application.Features.Auth.Commands.ApproveRegistration;
+using CleanArchitectureTemplate.Application.Features.Auth.Commands.ForgotPassword;
+using CleanArchitectureTemplate.Application.Features.Auth.Commands.ResetPasswordWithCode;
 using CleanArchitectureTemplate.Application.Features.Auth.Queries.GetPendingRegistrations;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -157,6 +159,42 @@ public class AuthController : ControllerBase
         );
 
         var response = await _mediator.Send(command);
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Request password reset - sends verification code to email
+    /// </summary>
+    /// <param name="request">Email address</param>
+    /// <returns>Success message</returns>
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<object>>> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        await _mediator.Send(new ForgotPasswordCommand(request.Email));
+        var response = ApiResponse<object>.Ok(null, "If the email exists, a verification code has been sent.");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Reset password using verification code
+    /// </summary>
+    /// <param name="request">Email, verification code and new password</param>
+    /// <returns>Success message</returns>
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<object>>> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        await _mediator.Send(new ResetPasswordWithCodeCommand(
+            request.Email,
+            request.VerificationCode,
+            request.NewPassword
+        ));
+        var response = ApiResponse<object>.Ok(null, "Password has been reset successfully.");
         return Ok(response);
     }
 }

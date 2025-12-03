@@ -79,6 +79,16 @@ public class User : BaseEntity
     public string? BlockedReason { get; set; }
     
     /// <summary>
+    /// Password reset verification code
+    /// </summary>
+    public string? PasswordResetCode { get; set; }
+    
+    /// <summary>
+    /// Password reset code expiry time
+    /// </summary>
+    public DateTime? PasswordResetCodeExpiry { get; set; }
+    
+    /// <summary>
     /// Whether the user account is active
     /// </summary>
     public bool IsActive { get; set; } = true;
