@@ -99,3 +99,6 @@ bower_components/
 # Publishing
 [Pp]ublish/
 [Pp]ublished/
+
+# Firebase credentials (bảo mật)
+firebase-credentials/

@@ -45,6 +45,26 @@ services:
       - Admin__FirstName=${Admin__FirstName:-System}
       - Admin__LastName=${Admin__LastName:-Administrator}
       
+      # Email Configuration
+      - Email__SmtpHost=${Email__SmtpHost:-smtp.gmail.com}
+      - Email__SmtpPort=${Email__SmtpPort:-587}
+      - Email__SmtpUsername=${Email__SmtpUsername}
+      - Email__SmtpPassword=${Email__SmtpPassword}
+      - Email__FromEmail=${Email__FromEmail:-noreply@fpt.edu.vn}
+      - Email__FromName=${Email__FromName:-FPT Booking System}
+      - Email__EnableSsl=${Email__EnableSsl:-true}
+      
+      # Cloudinary Configuration
+      - Cloudinary__CloudName=${Cloudinary__CloudName}
+      - Cloudinary__ApiKey=${Cloudinary__ApiKey}
+      - Cloudinary__ApiSecret=${Cloudinary__ApiSecret}
+      
+      # Firebase Configuration
+      - Firebase__CredentialPath=/app/firebase-credentials/firebase-adminsdk.json
+      
+    volumes:
+      - ./firebase-credentials:/app/firebase-credentials:ro
+      
     env_file:
       - .env
     depends_on:

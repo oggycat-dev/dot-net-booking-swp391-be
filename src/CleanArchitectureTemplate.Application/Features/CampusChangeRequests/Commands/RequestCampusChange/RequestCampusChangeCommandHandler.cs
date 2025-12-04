@@ -11,13 +11,16 @@ public class RequestCampusChangeCommandHandler : IRequestHandler<RequestCampusCh
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IFirebaseNotificationService _firebaseNotificationService;
 
     public RequestCampusChangeCommandHandler(
         IUnitOfWork unitOfWork,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IFirebaseNotificationService firebaseNotificationService)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _firebaseNotificationService = firebaseNotificationService;
     }
 
     public async Task<CampusChangeRequestDto> Handle(RequestCampusChangeCommand request, CancellationToken cancellationToken)
@@ -77,6 +80,24 @@ public class RequestCampusChangeCommandHandler : IRequestHandler<RequestCampusCh
 
         await _unitOfWork.CampusChangeRequests.AddAsync(campusChangeRequest);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Send notification to all admins
+        var currentCampusName = currentCampus?.CampusName ?? "No Campus";
+        await _firebaseNotificationService.SendToAllAdminsAsync(
+            "New Campus Change Request",
+            $"{user.FullName} requested to change campus from {currentCampusName} to {requestedCampus.CampusName}",
+            new Dictionary<string, string>
+            {
+                { "type", "campus_change_request" },
+                { "requestId", campusChangeRequest.Id.ToString() },
+                { "userId", user.Id.ToString() },
+                { "userName", user.FullName },
+                { "userEmail", user.Email },
+                { "currentCampusId", currentCampus?.Id.ToString() ?? "" },
+                { "currentCampusName", currentCampusName },
+                { "requestedCampusId", requestedCampus.Id.ToString() },
+                { "requestedCampusName", requestedCampus.CampusName }
+            });
 
         return new CampusChangeRequestDto(
             campusChangeRequest.Id,

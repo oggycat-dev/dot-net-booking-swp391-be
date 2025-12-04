@@ -37,6 +37,8 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<ICloudinaryService, CloudinaryService>();
+        services.AddScoped<INoShowService, NoShowService>();
+        services.AddScoped<IFirebaseNotificationService, FirebaseNotificationService>();
 
         // Add hosted services
         services.AddHostedService<AdminAccountInitializer>();

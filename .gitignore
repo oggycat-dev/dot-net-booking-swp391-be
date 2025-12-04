@@ -83,6 +83,10 @@ appsettings.*.json
 !appsettings.Development.json
 secrets.json
 
+# Firebase Credentials
+firebase-credentials/
+*firebase-adminsdk*.json
+
 # Docker
 docker-compose.override.yml
 

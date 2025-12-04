@@ -1,4 +1,5 @@
 using CleanArchitectureTemplate.Application.Common.DTOs.Booking;
+using CleanArchitectureTemplate.Application.Common.DTOs.Notifications;
 using CleanArchitectureTemplate.Application.Common.Exceptions;
 using CleanArchitectureTemplate.Application.Common.Interfaces;
 using CleanArchitectureTemplate.Domain.Entities;
@@ -12,15 +13,18 @@ public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand,
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
     private readonly IEmailService _emailService;
+    private readonly IFirebaseNotificationService _firebaseNotificationService;
 
     public CreateBookingCommandHandler(
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService,
-        IEmailService emailService)
+        IEmailService emailService,
+        IFirebaseNotificationService firebaseNotificationService)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
         _emailService = emailService;
+        _firebaseNotificationService = firebaseNotificationService;
     }
 
     public async Task<BookingDto> Handle(CreateBookingCommand request, CancellationToken cancellationToken)
@@ -60,6 +64,12 @@ public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand,
         if (request.BookingDate.Date > maxDate)
         {
             throw new ValidationException($"{user.Role} can only book up to {maxDaysAhead} days in advance");
+        }
+
+        // Check if booking date is a holiday
+        if (await _unitOfWork.Holidays.IsHolidayAsync(request.BookingDate))
+        {
+            throw new ValidationException("Cannot book facilities on holidays");
         }
 
         // Validate time range is within facility working hours
@@ -141,7 +151,20 @@ public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand,
                 booking.Purpose
             );
         }
-        // TODO: If Lecturer -> Send to Admin
+        else if (user.Role == UserRole.Lecturer)
+        {
+            // Lecturer booking goes to admin - send Firebase notification to all admins
+            await _firebaseNotificationService.SendBookingNotificationToAdminsAsync(new BookingNotificationPayload
+            {
+                Type = "new_booking",
+                BookingId = booking.Id,
+                UserName = user.FullName,
+                FacilityName = facility.FacilityName,
+                BookingDate = booking.BookingDate.ToString("dd/MM/yyyy"),
+                StartTime = booking.StartTime.ToString(@"hh\:mm"),
+                EndTime = booking.EndTime.ToString(@"hh\:mm")
+            });
+        }
 
         return new BookingDto(
             booking.Id,

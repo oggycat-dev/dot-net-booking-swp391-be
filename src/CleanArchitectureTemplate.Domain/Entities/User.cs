@@ -123,6 +123,11 @@ public class User : BaseEntity
     /// </summary>
     public DateTime? LastLogin { get; set; }
     
+    /// <summary>
+    /// Firebase Cloud Messaging token for push notifications (Admin users)
+    /// </summary>
+    public string? FcmToken { get; set; }
+    
     // Navigation properties
     /// <summary>
     /// Bookings created by this user

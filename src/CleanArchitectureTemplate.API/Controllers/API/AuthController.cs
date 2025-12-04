@@ -22,15 +22,18 @@ public class AuthController : ControllerBase
     private readonly IAuthenticationService _authService;
     private readonly ICurrentUserService _currentUserService;
     private readonly IMediator _mediator;
+    private readonly INoShowService _noShowService;
 
     public AuthController(
         IAuthenticationService authService,
         ICurrentUserService currentUserService,
-        IMediator mediator)
+        IMediator mediator,
+        INoShowService noShowService)
     {
         _authService = authService;
         _currentUserService = currentUserService;
         _mediator = mediator;
+        _noShowService = noShowService;
     }
 
     /// <summary>
@@ -72,6 +75,10 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<ApiResponse<LoginResponse>>> Login([FromBody] LoginRequest request)
     {
         var loginResponse = await _authService.LoginAsync(request);
+        
+        // Check and mark any expired bookings as no-show
+        await _noShowService.CheckAndMarkNoShowBookingsAsync(loginResponse.User.Id);
+        
         var response = ApiResponse<LoginResponse>.Ok(loginResponse, "Login successful");
         return Ok(response);
     }

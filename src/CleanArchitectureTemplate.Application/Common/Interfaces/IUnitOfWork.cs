@@ -34,6 +34,12 @@ public interface IBookingRepository : IRepository<Booking>
     Task<bool> HasConflictAsync(Guid facilityId, DateTime bookingDate, TimeSpan startTime, TimeSpan endTime, Guid? excludeBookingId = null);
 }
 
+public interface IHolidayRepository : IRepository<Holiday>
+{
+    Task<bool> IsHolidayAsync(DateTime date);
+    Task<List<Holiday>> GetUpcomingHolidaysAsync(int days = 30);
+}
+
 public interface IUnitOfWork : IDisposable
 {
     IUserRepository Users { get; }
@@ -42,5 +48,6 @@ public interface IUnitOfWork : IDisposable
     IFacilityTypeRepository FacilityTypes { get; }
     ICampusChangeRequestRepository CampusChangeRequests { get; }
     IBookingRepository Bookings { get; }
+    IHolidayRepository Holidays { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

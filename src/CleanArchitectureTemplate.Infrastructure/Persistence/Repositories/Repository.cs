@@ -52,4 +52,9 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : BaseEnti
         _dbSet.Remove(entity);
         return Task.CompletedTask;
     }
+
+    public virtual IQueryable<TEntity> GetQueryable()
+    {
+        return _dbSet.AsQueryable();
+    }
 }

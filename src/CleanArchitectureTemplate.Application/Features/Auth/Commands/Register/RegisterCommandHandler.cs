@@ -10,10 +10,14 @@ namespace CleanArchitectureTemplate.Application.Features.Auth.Commands.Register;
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ApiResponse<Guid>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IFirebaseNotificationService _firebaseNotificationService;
 
-    public RegisterCommandHandler(IUnitOfWork unitOfWork)
+    public RegisterCommandHandler(
+        IUnitOfWork unitOfWork,
+        IFirebaseNotificationService firebaseNotificationService)
     {
         _unitOfWork = unitOfWork;
+        _firebaseNotificationService = firebaseNotificationService;
     }
 
     public async Task<ApiResponse<Guid>> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -68,6 +72,21 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ApiRespon
 
         await _unitOfWork.Users.AddAsync(user);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Send notification to all admins
+        await _firebaseNotificationService.SendToAllAdminsAsync(
+            "New Registration Request",
+            $"{user.FullName} ({user.Email}) has submitted a {role} registration request",
+            new Dictionary<string, string>
+            {
+                { "type", "new_registration" },
+                { "userId", user.Id.ToString() },
+                { "userName", user.FullName },
+                { "userEmail", user.Email },
+                { "userRole", role.ToString() },
+                { "campusId", campus.Id.ToString() },
+                { "campusName", campus.CampusName }
+            });
 
         return ApiResponse<Guid>.Ok(user.Id, "Registration submitted successfully. Please wait for admin approval.");
     }
