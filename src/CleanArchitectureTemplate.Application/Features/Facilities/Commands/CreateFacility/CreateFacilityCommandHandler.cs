@@ -3,20 +3,38 @@ using CleanArchitectureTemplate.Application.Common.Interfaces;
 using CleanArchitectureTemplate.Domain.Entities;
 using CleanArchitectureTemplate.Domain.Enums;
 using MediatR;
+using System.Text.Json;
 
 namespace CleanArchitectureTemplate.Application.Features.Facilities.Commands.CreateFacility;
 
 public class CreateFacilityCommandHandler : IRequestHandler<CreateFacilityCommand, FacilityDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICloudinaryService _cloudinaryService;
 
-    public CreateFacilityCommandHandler(IUnitOfWork unitOfWork)
+    public CreateFacilityCommandHandler(IUnitOfWork unitOfWork, ICloudinaryService cloudinaryService)
     {
         _unitOfWork = unitOfWork;
+        _cloudinaryService = cloudinaryService;
     }
 
     public async Task<FacilityDto> Handle(CreateFacilityCommand request, CancellationToken cancellationToken)
     {
+        // Upload images to Cloudinary if provided
+        string? imageUrlJson = null;
+        if (request.Images != null && request.Images.Any())
+        {
+            var imageUrls = new List<string>();
+            foreach (var image in request.Images)
+            {
+                using var stream = image.OpenReadStream();
+                var url = await _cloudinaryService.UploadImageAsync(stream, image.FileName);
+                imageUrls.Add(url);
+            }
+            // Store as JSON array
+            imageUrlJson = JsonSerializer.Serialize(imageUrls);
+        }
+
         var facility = new Facility
         {
             Id = Guid.NewGuid(),
@@ -30,7 +48,7 @@ public class CreateFacilityCommandHandler : IRequestHandler<CreateFacilityComman
             Capacity = request.Capacity,
             Description = request.Description,
             Equipment = request.Equipment,
-            ImageUrl = request.ImageUrl,
+            ImageUrl = imageUrlJson,
             Status = FacilityStatus.Available,
             IsActive = true,
             CreatedAt = DateTime.UtcNow

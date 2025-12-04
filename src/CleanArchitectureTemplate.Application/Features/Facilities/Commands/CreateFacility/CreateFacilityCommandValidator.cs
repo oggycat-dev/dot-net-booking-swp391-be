@@ -39,8 +39,10 @@ public class CreateFacilityCommandValidator : AbstractValidator<CreateFacilityCo
         RuleFor(x => x.Equipment)
             .MaximumLength(500).WithMessage("Equipment cannot exceed 500 characters");
 
-        RuleFor(x => x.ImageUrl)
-            .MaximumLength(500).WithMessage("Image URL cannot exceed 500 characters");
+        RuleForEach(x => x.Images)
+            .Must(file => file.Length <= 5 * 1024 * 1024).WithMessage("Each image must be less than 5MB")
+            .Must(file => new[] { "image/jpeg", "image/jpg", "image/png", "image/gif" }.Contains(file.ContentType.ToLower()))
+            .WithMessage("Only JPEG, JPG, PNG, and GIF images are allowed");
     }
 
     private async Task<bool> BeUniqueCode(string code, CancellationToken cancellationToken)

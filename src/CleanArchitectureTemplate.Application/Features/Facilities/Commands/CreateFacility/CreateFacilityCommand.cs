@@ -1,5 +1,6 @@
 using CleanArchitectureTemplate.Application.Common.DTOs.Facility;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 
 namespace CleanArchitectureTemplate.Application.Features.Facilities.Commands.CreateFacility;
 
@@ -15,5 +16,5 @@ public record CreateFacilityCommand : IRequest<FacilityDto>
     public int Capacity { get; init; }
     public string? Description { get; init; }
     public string? Equipment { get; init; }
-    public string? ImageUrl { get; init; }
+    public List<IFormFile>? Images { get; init; }
 }

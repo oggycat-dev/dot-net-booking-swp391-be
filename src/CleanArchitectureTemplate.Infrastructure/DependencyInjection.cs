@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<ICloudinaryService, CloudinaryService>();
 
         // Add hosted services
         services.AddHostedService<AdminAccountInitializer>();
