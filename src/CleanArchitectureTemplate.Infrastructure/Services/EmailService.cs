@@ -227,6 +227,11 @@ public class EmailService : IEmailService
     public async Task SendBookingPendingLecturerApprovalEmailAsync(string to, string lecturerName, string studentName, string facilityName, DateTime bookingDate, TimeSpan startTime, TimeSpan endTime, string purpose)
     {
         var subject = "New Booking Request Needs Your Approval";
+        
+        // Format TimeSpan manually to avoid format exception
+        var startTimeStr = startTime.ToString(@"hh\:mm");
+        var endTimeStr = endTime.ToString(@"hh\:mm");
+        
         var body = $@"
             <html>
             <body style='font-family: Arial, sans-serif;'>
@@ -237,7 +242,7 @@ public class EmailService : IEmailService
                     <p><strong>Student:</strong> {studentName}</p>
                     <p><strong>Facility:</strong> {facilityName}</p>
                     <p><strong>Date:</strong> {bookingDate:dddd, MMMM dd, yyyy}</p>
-                    <p><strong>Time:</strong> {startTime:hh\\:mm} - {endTime:hh\\:mm}</p>
+                    <p><strong>Time:</strong> {startTimeStr} - {endTimeStr}</p>
                     <p><strong>Purpose:</strong> {purpose}</p>
                 </div>
                 <p>Please log in to the system to review and approve/reject this booking request.</p>

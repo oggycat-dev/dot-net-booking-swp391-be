@@ -44,12 +44,23 @@ public class BookingController : ControllerBase
     public async Task<ActionResult<ApiResponse<BookingDto>>> CreateBooking(
         [FromBody] CreateBookingRequest request)
     {
+        // Parse time strings to TimeSpan
+        if (!TimeSpan.TryParse(request.StartTime, out var startTime))
+        {
+            return BadRequest(ApiResponse<object>.BadRequest("Invalid StartTime format. Use HH:mm:ss"));
+        }
+
+        if (!TimeSpan.TryParse(request.EndTime, out var endTime))
+        {
+            return BadRequest(ApiResponse<object>.BadRequest("Invalid EndTime format. Use HH:mm:ss"));
+        }
+
         var command = new CreateBookingCommand
         {
             FacilityId = request.FacilityId,
             BookingDate = request.BookingDate,
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
+            StartTime = startTime,
+            EndTime = endTime,
             Purpose = request.Purpose,
             NumParticipants = request.NumParticipants,
             EquipmentNeeded = request.EquipmentNeeded,

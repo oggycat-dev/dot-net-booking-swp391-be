@@ -37,8 +37,8 @@ public record BookingDto(
 public record CreateBookingRequest(
     Guid FacilityId,
     DateTime BookingDate,
-    TimeSpan StartTime,
-    TimeSpan EndTime,
+    string StartTime,
+    string EndTime,
     string Purpose,
     int NumParticipants,
     string? EquipmentNeeded,
