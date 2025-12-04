@@ -1,6 +1,8 @@
 using CleanArchitectureTemplate.Application.Common.DTOs;
 using CleanArchitectureTemplate.Application.Common.DTOs.Booking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.AdminApproveBooking;
+using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CheckInBooking;
+using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CheckOutBooking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CreateBooking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.LecturerApproveBooking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetMyBookingHistory;
@@ -189,6 +191,48 @@ public class BookingController : ControllerBase
             : "Booking rejected";
 
         var response = ApiResponse<object>.Ok(null, message);
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Check-in to a booking (Student/Lecturer)
+    /// </summary>
+    /// <param name="bookingId">Booking ID</param>
+    /// <returns>Success message</returns>
+    [HttpPost("{bookingId}/check-in")]
+    [Authorize(Roles = "Student,Lecturer")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<object>>> CheckInBooking(Guid bookingId)
+    {
+        var command = new CheckInBookingCommand { BookingId = bookingId };
+        await _mediator.Send(command);
+
+        var response = ApiResponse<object>.Ok(null, "Checked in successfully");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Check-out from a booking (Student/Lecturer)
+    /// </summary>
+    /// <param name="bookingId">Booking ID</param>
+    /// <returns>Success message</returns>
+    [HttpPost("{bookingId}/check-out")]
+    [Authorize(Roles = "Student,Lecturer")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<object>>> CheckOutBooking(Guid bookingId)
+    {
+        var command = new CheckOutBookingCommand { BookingId = bookingId };
+        await _mediator.Send(command);
+
+        var response = ApiResponse<object>.Ok(null, "Checked out successfully");
         return Ok(response);
     }
 }

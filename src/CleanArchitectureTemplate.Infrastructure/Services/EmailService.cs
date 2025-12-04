@@ -223,4 +223,30 @@ public class EmailService : IEmailService
         
         await SendEmailAsync(to, subject, body);
     }
+
+    public async Task SendBookingPendingLecturerApprovalEmailAsync(string to, string lecturerName, string studentName, string facilityName, DateTime bookingDate, TimeSpan startTime, TimeSpan endTime, string purpose)
+    {
+        var subject = "New Booking Request Needs Your Approval";
+        var body = $@"
+            <html>
+            <body style='font-family: Arial, sans-serif;'>
+                <h2>New Booking Request</h2>
+                <p>Dear {lecturerName},</p>
+                <p>A student has submitted a booking request that requires your approval:</p>
+                <div style='background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;'>
+                    <p><strong>Student:</strong> {studentName}</p>
+                    <p><strong>Facility:</strong> {facilityName}</p>
+                    <p><strong>Date:</strong> {bookingDate:dddd, MMMM dd, yyyy}</p>
+                    <p><strong>Time:</strong> {startTime:hh\\:mm} - {endTime:hh\\:mm}</p>
+                    <p><strong>Purpose:</strong> {purpose}</p>
+                </div>
+                <p>Please log in to the system to review and approve/reject this booking request.</p>
+                <p>Best regards,<br>FPT Booking System</p>
+            </body>
+            </html>
+        ";
+        
+        await SendEmailAsync(to, subject, body);
+    }
 }
+

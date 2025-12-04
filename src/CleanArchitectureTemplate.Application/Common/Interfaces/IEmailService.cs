@@ -11,4 +11,5 @@ public interface IEmailService
     Task SendBookingRejectedEmailAsync(string to, string fullName, string facilityName, string reason);
     Task SendBookingReminderEmailAsync(string to, string fullName, string facilityName, DateTime startTime);
     Task SendPasswordResetCodeEmailAsync(string to, string fullName, string verificationCode);
+    Task SendBookingPendingLecturerApprovalEmailAsync(string to, string lecturerName, string studentName, string facilityName, DateTime bookingDate, TimeSpan startTime, TimeSpan endTime, string purpose);
 }

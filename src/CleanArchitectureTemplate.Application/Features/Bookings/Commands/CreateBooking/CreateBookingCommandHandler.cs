@@ -11,13 +11,16 @@ public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand,
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IEmailService _emailService;
 
     public CreateBookingCommandHandler(
         IUnitOfWork unitOfWork,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _emailService = emailService;
     }
 
     public async Task<BookingDto> Handle(CreateBookingCommand request, CancellationToken cancellationToken)
@@ -120,9 +123,25 @@ public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand,
         await _unitOfWork.Bookings.AddAsync(booking);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // TODO: Send notification email
-        // If Student -> Send to Lecturer
-        // If Lecturer -> Send to Admin
+        // Send notification email
+        if (user.Role == UserRole.Student && !string.IsNullOrWhiteSpace(request.LecturerEmail))
+        {
+            // Send email to lecturer for approval
+            var lecturer = await _unitOfWork.Users.GetByEmailAsync(request.LecturerEmail);
+            var lecturerName = lecturer?.FullName ?? "Lecturer";
+            
+            await _emailService.SendBookingPendingLecturerApprovalEmailAsync(
+                request.LecturerEmail,
+                lecturerName,
+                user.FullName,
+                facility.FacilityName,
+                booking.BookingDate,
+                booking.StartTime,
+                booking.EndTime,
+                booking.Purpose
+            );
+        }
+        // TODO: If Lecturer -> Send to Admin
 
         return new BookingDto(
             booking.Id,

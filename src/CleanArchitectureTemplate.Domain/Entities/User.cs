@@ -142,13 +142,21 @@ public class User : BaseEntity
     {
         NoShowCount++;
         
-        // Auto-block after 3 no-shows for 1 month
-        if (NoShowCount >= 3)
+        // Auto-block after 4 no-shows for 30 days
+        if (NoShowCount >= 4)
         {
-            BlockUser("3 no-shows reached - automatic 1 month block", DateTime.UtcNow.AddMonths(1));
+            BlockUser("4 no-shows reached - automatic 30 days block", DateTime.UtcNow.AddDays(30));
         }
         
         this.MarkAsModified();
+    }
+    
+    /// <summary>
+    /// Increment no-show count (alias for RecordNoShow)
+    /// </summary>
+    public void IncrementNoShowCount()
+    {
+        RecordNoShow();
     }
     
     /// <summary>
