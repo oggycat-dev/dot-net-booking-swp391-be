@@ -5,6 +5,7 @@ using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CheckInBo
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CheckOutBooking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CreateBooking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.LecturerApproveBooking;
+using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetBookingsForCalendar;
 using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetMyBookingHistory;
 using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetMyPendingBookings;
 using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetPendingAdminApprovals;
@@ -28,6 +29,44 @@ public class BookingController : ControllerBase
     public BookingController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    /// <summary>
+    /// Get bookings for calendar view - shows occupied time slots
+    /// </summary>
+    /// <param name="startDate">Start date of the week (YYYY-MM-DD)</param>
+    /// <param name="endDate">End date of the week (YYYY-MM-DD)</param>
+    /// <param name="facilityId">Filter by facility (optional)</param>
+    /// <param name="campusId">Filter by campus (optional)</param>
+    /// <returns>List of bookings in the specified time range</returns>
+    [HttpGet("calendar")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<List<BookingCalendarDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<List<BookingCalendarDto>>>> GetBookingsForCalendar(
+        [FromQuery] DateTime startDate,
+        [FromQuery] DateTime endDate,
+        [FromQuery] Guid? facilityId = null,
+        [FromQuery] Guid? campusId = null)
+    {
+        if (startDate > endDate)
+        {
+            return BadRequest(ApiResponse<object>.BadRequest("StartDate must be before or equal to EndDate"));
+        }
+
+        var query = new GetBookingsForCalendarQuery
+        {
+            StartDate = startDate,
+            EndDate = endDate,
+            FacilityId = facilityId,
+            CampusId = campusId
+        };
+
+        var bookings = await _mediator.Send(query);
+        var response = ApiResponse<List<BookingCalendarDto>>.Ok(
+            bookings, 
+            $"Retrieved {bookings.Count} booking(s) for the specified period");
+        return Ok(response);
     }
 
     /// <summary>
