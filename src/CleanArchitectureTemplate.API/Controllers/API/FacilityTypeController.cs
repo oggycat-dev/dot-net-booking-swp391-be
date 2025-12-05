@@ -1,6 +1,7 @@
 using CleanArchitectureTemplate.Application.Common.DTOs;
 using CleanArchitectureTemplate.Application.Common.DTOs.FacilityType;
 using CleanArchitectureTemplate.Application.Features.FacilityTypes.Commands.CreateFacilityType;
+using CleanArchitectureTemplate.Application.Features.FacilityTypes.Commands.UpdateFacilityType;
 using CleanArchitectureTemplate.Application.Features.FacilityTypes.Queries.GetAllFacilityTypes;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -60,5 +61,33 @@ public class FacilityTypeController : ControllerBase
         var facilityType = await _mediator.Send(command);
         var response = ApiResponse<FacilityTypeDto>.Created(facilityType, "Facility type created successfully");
         return StatusCode(response.StatusCode, response);
+    }
+
+    /// <summary>
+    /// Update a facility type (Admin only)
+    /// </summary>
+    /// <param name="id">Facility type ID</param>
+    /// <param name="request">Facility type update request</param>
+    /// <returns>Updated facility type</returns>
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<FacilityTypeDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<FacilityTypeDto>>> UpdateFacilityType(Guid id, [FromBody] UpdateFacilityTypeRequest request)
+    {
+        var command = new UpdateFacilityTypeCommand
+        {
+            Id = id,
+            TypeName = request.TypeName,
+            Description = request.Description,
+            IsActive = request.IsActive
+        };
+
+        var facilityType = await _mediator.Send(command);
+        var response = ApiResponse<FacilityTypeDto>.Ok(facilityType, "Facility type updated successfully");
+        return Ok(response);
     }
 }

@@ -128,31 +128,57 @@ public class FacilityController : ControllerBase
     /// Update a facility (Admin only)
     /// </summary>
     /// <param name="id">Facility ID</param>
-    /// <param name="request">Facility update request</param>
+    /// <param name="facilityName">Facility name</param>
+    /// <param name="typeId">Facility type ID</param>
+    /// <param name="building">Building</param>
+    /// <param name="floor">Floor</param>
+    /// <param name="roomNumber">Room number</param>
+    /// <param name="capacity">Capacity</param>
+    /// <param name="description">Description</param>
+    /// <param name="equipment">Equipment</param>
+    /// <param name="imageUrl">Image URL (optional, if not uploading new images)</param>
+    /// <param name="images">New images to upload (optional)</param>
+    /// <param name="status">Status</param>
+    /// <param name="isActive">Is active</param>
     /// <returns>Updated facility</returns>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(ApiResponse<FacilityDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<FacilityDto>>> UpdateFacility(Guid id, [FromBody] UpdateFacilityRequest request)
+    public async Task<ActionResult<ApiResponse<FacilityDto>>> UpdateFacility(
+        Guid id,
+        [FromForm] string facilityName,
+        [FromForm] Guid typeId,
+        [FromForm] string? building,
+        [FromForm] string? floor,
+        [FromForm] string? roomNumber,
+        [FromForm] int capacity,
+        [FromForm] string? description,
+        [FromForm] string? equipment,
+        [FromForm] string? imageUrl,
+        [FromForm] List<IFormFile>? images,
+        [FromForm] string status,
+        [FromForm] bool isActive)
     {
         var command = new UpdateFacilityCommand
         {
             Id = id,
-            FacilityName = request.FacilityName,
-            TypeId = request.TypeId,
-            Building = request.Building,
-            Floor = request.Floor,
-            RoomNumber = request.RoomNumber,
-            Capacity = request.Capacity,
-            Description = request.Description,
-            Equipment = request.Equipment,
-            ImageUrl = request.ImageUrl,
-            Status = request.Status,
-            IsActive = request.IsActive
+            FacilityName = facilityName,
+            TypeId = typeId,
+            Building = building,
+            Floor = floor,
+            RoomNumber = roomNumber,
+            Capacity = capacity,
+            Description = description,
+            Equipment = equipment,
+            ImageUrl = imageUrl,
+            Images = images,
+            Status = status,
+            IsActive = isActive
         };
 
         var facility = await _mediator.Send(command);
