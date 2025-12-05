@@ -30,6 +30,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<FacilityMaintenance> FacilityMaintenances => Set<FacilityMaintenance>();
     public DbSet<BookingConflict> BookingConflicts => Set<BookingConflict>();
     public DbSet<BookingHistory> BookingHistories => Set<BookingHistory>();
+    public DbSet<FacilityIssueReport> FacilityIssueReports => Set<FacilityIssueReport>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -330,6 +331,45 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         builder.Entity<FacilityMaintenance>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<BookingConflict>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<BookingHistory>().HasQueryFilter(e => !e.IsDeleted);
+        builder.Entity<FacilityIssueReport>().HasQueryFilter(e => !e.IsDeleted);
+
+        // ===== FacilityIssueReport Configuration =====
+        builder.Entity<FacilityIssueReport>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ReportCode).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.IssueTitle).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.IssueDescription).IsRequired().HasMaxLength(2000);
+            entity.Property(e => e.Severity).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+            
+            entity.HasOne(e => e.Booking)
+                .WithMany()
+                .HasForeignKey(e => e.BookingId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.ReportedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.ReportedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.NewFacility)
+                .WithMany()
+                .HasForeignKey(e => e.NewFacilityId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.HandledByUser)
+                .WithMany()
+                .HasForeignKey(e => e.HandledBy)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasIndex(e => e.ReportCode).IsUnique();
+            entity.HasIndex(e => e.BookingId);
+            entity.HasIndex(e => e.ReportedBy);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.IsDeleted);
+        });
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

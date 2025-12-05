@@ -40,6 +40,13 @@ public interface IHolidayRepository : IRepository<Holiday>
     Task<List<Holiday>> GetUpcomingHolidaysAsync(int days = 30);
 }
 
+public interface IFacilityIssueReportRepository : IRepository<FacilityIssueReport>
+{
+    Task<List<FacilityIssueReport>> GetPendingReportsAsync();
+    Task<List<FacilityIssueReport>> GetByUserIdAsync(Guid userId);
+    Task<List<FacilityIssueReport>> GetByBookingIdAsync(Guid bookingId);
+}
+
 public interface IUnitOfWork : IDisposable
 {
     IUserRepository Users { get; }
@@ -49,5 +56,6 @@ public interface IUnitOfWork : IDisposable
     ICampusChangeRequestRepository CampusChangeRequests { get; }
     IBookingRepository Bookings { get; }
     IHolidayRepository Holidays { get; }
+    IFacilityIssueReportRepository FacilityIssueReports { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
