@@ -17,13 +17,17 @@ public class GetBookingsForCalendarQueryHandler : IRequestHandler<GetBookingsFor
 
     public async Task<List<BookingCalendarDto>> Handle(GetBookingsForCalendarQuery request, CancellationToken cancellationToken)
     {
+        // Ensure DateTime has UTC kind for PostgreSQL
+        var startDate = DateTime.SpecifyKind(request.StartDate.Date, DateTimeKind.Utc);
+        var endDate = DateTime.SpecifyKind(request.EndDate.Date, DateTimeKind.Utc);
+
         var query = _unitOfWork.Bookings.GetQueryable()
             .Include(b => b.Facility)
                 .ThenInclude(f => f!.Campus)
             .Include(b => b.User)
             .Where(b => !b.IsDeleted &&
-                       b.BookingDate >= request.StartDate.Date &&
-                       b.BookingDate <= request.EndDate.Date &&
+                       b.BookingDate >= startDate &&
+                       b.BookingDate <= endDate &&
                        // Include only bookings that occupy time slots
                        (b.Status == BookingStatus.WaitingLecturerApproval ||
                         b.Status == BookingStatus.Pending ||

@@ -18,9 +18,9 @@ public class GetAdminDashboardQueryHandler : IRequestHandler<GetAdminDashboardQu
     public async Task<AdminDashboardDto> Handle(GetAdminDashboardQuery request, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-        var today = now.Date;
-        var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
-        var startOfMonth = new DateTime(today.Year, today.Month, 1);
+        var today = DateTime.SpecifyKind(now.Date, DateTimeKind.Utc);
+        var startOfWeek = DateTime.SpecifyKind(today.AddDays(-(int)today.DayOfWeek), DateTimeKind.Utc);
+        var startOfMonth = DateTime.SpecifyKind(new DateTime(today.Year, today.Month, 1), DateTimeKind.Utc);
         var currentTime = now.TimeOfDay;
 
         // User statistics
@@ -31,7 +31,7 @@ public class GetAdminDashboardQueryHandler : IRequestHandler<GetAdminDashboardQu
         var totalUsers = allUsers.Count;
         var totalStudents = allUsers.Count(u => u.Role == UserRole.Student);
         var totalLecturers = allUsers.Count(u => u.Role == UserRole.Lecturer);
-        var pendingRegistrations = allUsers.Count(u => u.AccountStatus == AccountStatus.PendingApproval);
+        var pendingRegistrations = allUsers.Count(u => !u.IsApproved && u.Role != UserRole.Admin);
 
         // Campus change requests
         var pendingCampusChangeRequests = await _unitOfWork.CampusChangeRequests.GetQueryable()
@@ -68,8 +68,19 @@ public class GetAdminDashboardQueryHandler : IRequestHandler<GetAdminDashboardQu
 
         var totalFacilities = allFacilities.Count;
         var availableFacilities = allFacilities.Count(f => f.Status == FacilityStatus.Available && f.IsActive);
-        var inUseFacilities = allFacilities.Count(f => f.Status == FacilityStatus.InUse);
-        var maintenanceFacilities = allFacilities.Count(f => f.Status == FacilityStatus.Maintenance);
+        
+        // Count facilities currently in use based on active bookings
+        var currentlyInUseFacilityIds = allBookings
+            .Where(b => b.BookingDate.Date == today && 
+                       b.Status == BookingStatus.InUse &&
+                       b.StartTime <= currentTime && 
+                       b.EndTime >= currentTime)
+            .Select(b => b.FacilityId)
+            .Distinct()
+            .ToList();
+        
+        var inUseFacilities = currentlyInUseFacilityIds.Count;
+        var maintenanceFacilities = allFacilities.Count(f => f.Status == FacilityStatus.UnderMaintenance);
 
         var totalCampuses = await _unitOfWork.Campuses.GetQueryable()
             .Where(c => !c.IsDeleted && c.IsActive)
@@ -103,7 +114,7 @@ public class GetAdminDashboardQueryHandler : IRequestHandler<GetAdminDashboardQu
                 u.FullName,
                 u.Email,
                 u.Role.ToString(),
-                u.AccountStatus.ToString(),
+                u.IsApproved ? "Approved" : "Pending",
                 u.CreatedAt
             ))
             .ToList();
