@@ -1,4 +1,5 @@
 using CleanArchitectureTemplate.Application.Common.DTOs.Dashboard;
+using CleanArchitectureTemplate.Application.Common.Helpers;
 using CleanArchitectureTemplate.Application.Common.Interfaces;
 using CleanArchitectureTemplate.Domain.Enums;
 using MediatR;
@@ -17,10 +18,11 @@ public class GetAdminDashboardQueryHandler : IRequestHandler<GetAdminDashboardQu
 
     public async Task<AdminDashboardDto> Handle(GetAdminDashboardQuery request, CancellationToken cancellationToken)
     {
-        var now = DateTime.UtcNow;
-        var today = DateTime.SpecifyKind(now.Date, DateTimeKind.Utc);
-        var startOfWeek = DateTime.SpecifyKind(today.AddDays(-(int)today.DayOfWeek), DateTimeKind.Utc);
-        var startOfMonth = DateTime.SpecifyKind(new DateTime(today.Year, today.Month, 1), DateTimeKind.Utc);
+        // Use Vietnam time (GMT+7) for dashboard statistics
+        var now = TimeZoneHelper.GetVietnamNow();
+        var today = now.Date;
+        var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
+        var startOfMonth = new DateTime(today.Year, today.Month, 1);
         var currentTime = now.TimeOfDay;
 
         // User statistics

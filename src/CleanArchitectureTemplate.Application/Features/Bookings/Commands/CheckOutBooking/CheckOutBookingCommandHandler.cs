@@ -1,4 +1,5 @@
 using CleanArchitectureTemplate.Application.Common.Exceptions;
+using CleanArchitectureTemplate.Application.Common.Helpers;
 using CleanArchitectureTemplate.Application.Common.Interfaces;
 using CleanArchitectureTemplate.Domain.Entities;
 using CleanArchitectureTemplate.Domain.Enums;
@@ -48,8 +49,9 @@ public class CheckOutBookingCommandHandler : IRequestHandler<CheckOutBookingComm
             throw new ValidationException("This booking has already been checked out");
         }
 
-        var now = DateTime.UtcNow;
-        var bookingEndDateTime = DateTime.SpecifyKind(booking.BookingDate.Date, DateTimeKind.Utc).Add(booking.EndTime);
+        // Use Vietnam time (GMT+7) for check-out logic
+        var now = TimeZoneHelper.GetVietnamNow();
+        var bookingEndDateTime = booking.BookingDate.Date.Add(booking.EndTime); // Already in Vietnam time
         
         // Check-out window: from end time to 15 minutes after end time
         var checkOutWindowStart = bookingEndDateTime;

@@ -1,4 +1,5 @@
 using CleanArchitectureTemplate.Application.Common.Exceptions;
+using CleanArchitectureTemplate.Application.Common.Helpers;
 using CleanArchitectureTemplate.Application.Common.Interfaces;
 using CleanArchitectureTemplate.Domain.Entities;
 using CleanArchitectureTemplate.Domain.Enums;
@@ -48,19 +49,23 @@ public class CheckInBookingCommandHandler : IRequestHandler<CheckInBookingComman
             throw new ValidationException("This booking has already been checked in");
         }
 
-        var now = DateTime.UtcNow;
-        var bookingDateTime = DateTime.SpecifyKind(booking.BookingDate.Date, DateTimeKind.Utc).Add(booking.StartTime);
+        // Get current Vietnam time (GMT+7) for comparison
+        var nowVietnam = TimeZoneHelper.GetVietnamNow();
         
-        // Check-in window: from start time to 15 minutes after start time
+        // Booking date and time are stored as local time (treat as Vietnam time)
+        // Simply combine date + time for comparison in Vietnam timezone
+        var bookingDateTime = booking.BookingDate.Date.Add(booking.StartTime);
+        
+        // Check-in window: from start time to 15 minutes after start time (in Vietnam time)
         var checkInWindowStart = bookingDateTime;
         var checkInWindowEnd = bookingDateTime.AddMinutes(15);
 
-        if (now < checkInWindowStart)
+        if (nowVietnam < checkInWindowStart)
         {
-            throw new ValidationException($"Check-in is not available yet. You can check in from {checkInWindowStart:HH:mm}");
+            throw new ValidationException($"Check-in is not available yet. You can check in from {checkInWindowStart:HH:mm} (GMT+7)");
         }
 
-        if (now > checkInWindowEnd)
+        if (nowVietnam > checkInWindowEnd)
         {
             // Missed check-in - mark as no-show
             booking.Status = BookingStatus.NoShow;
@@ -74,7 +79,7 @@ public class CheckInBookingCommandHandler : IRequestHandler<CheckInBookingComman
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             
-            throw new ValidationException($"Check-in window has expired (until {checkInWindowEnd:HH:mm}). This booking is marked as no-show. Total no-shows: {user.NoShowCount}/4");
+            throw new ValidationException($"Check-in window has expired (until {checkInWindowEnd:HH:mm} GMT+7). This booking is marked as no-show. Total no-shows: {user.NoShowCount}/4");
         }
 
         // Perform check-in

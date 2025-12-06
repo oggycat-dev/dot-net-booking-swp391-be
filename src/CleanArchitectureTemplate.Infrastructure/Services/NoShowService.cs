@@ -1,3 +1,4 @@
+using CleanArchitectureTemplate.Application.Common.Helpers;
 using CleanArchitectureTemplate.Application.Common.Interfaces;
 using CleanArchitectureTemplate.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -28,13 +29,14 @@ public class NoShowService : INoShowService
 
             if (!approvedBookings.Any()) return;
 
-            var now = DateTime.UtcNow;
+            // Use Vietnam time (GMT+7) for no-show check
+            var now = TimeZoneHelper.GetVietnamNow();
             var noShowBookings = new List<Guid>();
 
             foreach (var booking in approvedBookings)
             {
-                var bookingEndDateTime = DateTime.SpecifyKind(booking.BookingDate.Date, DateTimeKind.Utc)
-                    .Add(booking.EndTime);
+                // Booking times are in Vietnam time
+                var bookingEndDateTime = booking.BookingDate.Date.Add(booking.EndTime);
                 var checkOutDeadline = bookingEndDateTime.AddMinutes(15);
 
                 // If checkout deadline has passed and user hasn't checked out
@@ -61,7 +63,8 @@ public class NoShowService : INoShowService
                 // Check if user should be blocked (>= 4 no-shows)
                 if (user.NoShowCount >= 4)
                 {
-                    user.BlockUser($"Exceeded maximum no-show limit ({user.NoShowCount} times)", DateTime.UtcNow.AddDays(30));
+                    var blockUntil = TimeZoneHelper.ConvertToUtc(TimeZoneHelper.GetVietnamNow().AddDays(30));
+                    user.BlockUser($"Exceeded maximum no-show limit ({user.NoShowCount} times)", blockUntil);
                     
                     _logger.LogWarning(
                         "User {UserId} blocked for 30 days due to {NoShowCount} no-shows",
