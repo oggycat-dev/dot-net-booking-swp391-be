@@ -31,6 +31,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<BookingConflict> BookingConflicts => Set<BookingConflict>();
     public DbSet<BookingHistory> BookingHistories => Set<BookingHistory>();
     public DbSet<FacilityIssueReport> FacilityIssueReports => Set<FacilityIssueReport>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -369,6 +370,28 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.HasIndex(e => e.ReportedBy);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.IsDeleted);
+        });
+
+        // ===== Notification Configuration =====
+        builder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Body).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Type).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.IsRead).IsRequired().HasDefaultValue(false);
+            
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.IsRead);
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.CreatedAt);
+            
+            entity.HasQueryFilter(e => !e.IsDeleted);
         });
     }
 

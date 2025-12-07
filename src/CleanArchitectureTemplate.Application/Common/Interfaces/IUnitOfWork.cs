@@ -47,6 +47,14 @@ public interface IFacilityIssueReportRepository : IRepository<FacilityIssueRepor
     Task<List<FacilityIssueReport>> GetByBookingIdAsync(Guid bookingId);
 }
 
+public interface INotificationRepository : IRepository<Notification>
+{
+    Task<List<Notification>> GetUserNotificationsAsync(Guid userId, bool? isRead = null, int? limit = null);
+    Task<int> GetUnreadCountAsync(Guid userId);
+    Task MarkAsReadAsync(Guid notificationId);
+    Task MarkAllAsReadAsync(Guid userId);
+}
+
 public interface IUnitOfWork : IDisposable
 {
     IUserRepository Users { get; }
@@ -57,5 +65,6 @@ public interface IUnitOfWork : IDisposable
     IBookingRepository Bookings { get; }
     IHolidayRepository Holidays { get; }
     IFacilityIssueReportRepository FacilityIssueReports { get; }
+    INotificationRepository Notifications { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -1,5 +1,6 @@
 using CleanArchitectureTemplate.Application.Common.DTOs.Notifications;
 using CleanArchitectureTemplate.Application.Common.Interfaces;
+using CleanArchitectureTemplate.Domain.Entities;
 using CleanArchitectureTemplate.Domain.Enums;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
@@ -7,6 +8,8 @@ using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using FcmNotification = FirebaseAdmin.Messaging.Notification;
 
 namespace CleanArchitectureTemplate.Infrastructure.Services;
 
@@ -92,7 +95,6 @@ public class FirebaseNotificationService : IFirebaseNotificationService
             var adminUsers = await _unitOfWork.Users
                 .GetQueryable()
                 .Where(u => u.Role == UserRole.Admin && !string.IsNullOrEmpty(u.FcmToken))
-                .Select(u => u.FcmToken!)
                 .ToListAsync();
 
             if (!adminUsers.Any())
@@ -103,10 +105,34 @@ public class FirebaseNotificationService : IFirebaseNotificationService
 
             _logger.LogInformation("Sending notification to {Count} admin users", adminUsers.Count);
 
+            // Save notifications to database for all admins
+            foreach (var admin in adminUsers)
+            {
+                var notification = new Domain.Entities.Notification
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = admin.Id,
+                    Title = title,
+                    Body = body,
+                    Type = data?.GetValueOrDefault("type") ?? "general",
+                    RelatedEntityId = data?.ContainsKey("relatedId") == true && Guid.TryParse(data["relatedId"], out var relatedId) 
+                        ? relatedId 
+                        : null,
+                    Data = data != null ? JsonSerializer.Serialize(data) : null,
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _unitOfWork.Notifications.AddAsync(notification);
+            }
+            await _unitOfWork.SaveChangesAsync();
+
+            // Send FCM push notifications
+            var fcmTokens = adminUsers.Select(u => u.FcmToken!).ToList();
+
             var message = new MulticastMessage
             {
-                Tokens = adminUsers,
-                Notification = new Notification
+                Tokens = fcmTokens,
+                Notification = new FcmNotification
                 {
                     Title = title,
                     Body = body
@@ -144,7 +170,7 @@ public class FirebaseNotificationService : IFirebaseNotificationService
                     if (!response.Responses[i].IsSuccess)
                     {
                         _logger.LogWarning("Failed to send to token {Token}: {Error}", 
-                            adminUsers[i], response.Responses[i].Exception?.Message);
+                            fcmTokens[i], response.Responses[i].Exception?.Message);
                     }
                 }
             }
@@ -174,7 +200,7 @@ public class FirebaseNotificationService : IFirebaseNotificationService
             var message = new Message
             {
                 Token = fcmToken,
-                Notification = new Notification
+                Notification = new FcmNotification
                 {
                     Title = title,
                     Body = body
@@ -223,19 +249,40 @@ public class FirebaseNotificationService : IFirebaseNotificationService
 
         try
         {
-            var user = await _unitOfWork.Users
-                .GetQueryable()
-                .Where(u => u.Id == userId && !string.IsNullOrEmpty(u.FcmToken))
-                .Select(u => u.FcmToken)
-                .FirstOrDefaultAsync();
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
 
-            if (string.IsNullOrEmpty(user))
+            if (user == null)
             {
-                _logger.LogWarning("User {UserId} not found or has no FCM token", userId);
+                _logger.LogWarning("User {UserId} not found", userId);
                 return false;
             }
 
-            return await SendToTokenAsync(user, title, body, data);
+            // Save notification to database
+            var notification = new Domain.Entities.Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Title = title,
+                Body = body,
+                Type = data?.GetValueOrDefault("type") ?? "general",
+                RelatedEntityId = data?.ContainsKey("relatedId") == true && Guid.TryParse(data["relatedId"], out var relatedId) 
+                    ? relatedId 
+                    : null,
+                Data = data != null ? JsonSerializer.Serialize(data) : null,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.Notifications.AddAsync(notification);
+            await _unitOfWork.SaveChangesAsync();
+
+            // Send FCM push notification if user has token
+            if (!string.IsNullOrEmpty(user.FcmToken))
+            {
+                return await SendToTokenAsync(user.FcmToken, title, body, data);
+            }
+
+            return true; // Notification saved to DB even if no FCM token
         }
         catch (Exception ex)
         {

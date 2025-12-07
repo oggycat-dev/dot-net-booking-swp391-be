@@ -2,6 +2,7 @@ using CleanArchitectureTemplate.Application.Common.DTOs;
 using CleanArchitectureTemplate.Application.Common.DTOs.FacilityIssue;
 using CleanArchitectureTemplate.Application.Features.FacilityIssues.Commands.ChangeRoomForIssue;
 using CleanArchitectureTemplate.Application.Features.FacilityIssues.Commands.CreateIssueReport;
+using CleanArchitectureTemplate.Application.Features.FacilityIssues.Commands.RejectIssueReport;
 using CleanArchitectureTemplate.Application.Features.FacilityIssues.Queries.GetMyIssueReports;
 using CleanArchitectureTemplate.Application.Features.FacilityIssues.Queries.GetPendingIssueReports;
 using MediatR;
@@ -120,6 +121,34 @@ public class FacilityIssueController : ControllerBase
 
         var report = await _mediator.Send(command);
         var response = ApiResponse<FacilityIssueReportDto>.Ok(report, "Room changed successfully. Email notification sent to user.");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Reject a facility issue report (Admin only)
+    /// </summary>
+    /// <param name="reportId">Issue report ID</param>
+    /// <param name="request">Rejection request with reason</param>
+    /// <returns>Updated issue report</returns>
+    [HttpPost("{reportId}/reject")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<FacilityIssueReportDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<FacilityIssueReportDto>>> RejectIssueReport(
+        Guid reportId,
+        [FromBody] RejectIssueReportRequest request)
+    {
+        var command = new RejectIssueReportCommand
+        {
+            ReportId = reportId,
+            RejectionReason = request.RejectionReason
+        };
+
+        var report = await _mediator.Send(command);
+        var response = ApiResponse<FacilityIssueReportDto>.Ok(report, "Issue report rejected successfully. Email notification sent to user.");
         return Ok(response);
     }
 }

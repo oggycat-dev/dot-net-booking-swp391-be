@@ -14,15 +14,18 @@ public class CreateIssueReportCommandHandler : IRequestHandler<CreateIssueReport
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
     private readonly ICloudinaryService _cloudinaryService;
+    private readonly IFirebaseNotificationService _firebaseService;
 
     public CreateIssueReportCommandHandler(
         IUnitOfWork unitOfWork, 
         ICurrentUserService currentUserService,
-        ICloudinaryService cloudinaryService)
+        ICloudinaryService cloudinaryService,
+        IFirebaseNotificationService firebaseService)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
         _cloudinaryService = cloudinaryService;
+        _firebaseService = firebaseService;
     }
 
     public async Task<FacilityIssueReportDto> Handle(CreateIssueReportCommand request, CancellationToken cancellationToken)
@@ -89,6 +92,31 @@ public class CreateIssueReportCommandHandler : IRequestHandler<CreateIssueReport
                 .ThenInclude(b => b.Facility)
             .Include(r => r.ReportedByUser)
             .FirstOrDefaultAsync(r => r.Id == report.Id, cancellationToken);
+
+        // Send Firebase notification to all admins
+        try
+        {
+            var notificationData = new Dictionary<string, string>
+            {
+                { "type", "facility_issue_report" },
+                { "reportId", createdReport!.Id.ToString() },
+                { "reportCode", createdReport.ReportCode },
+                { "bookingCode", createdReport.Booking.BookingCode },
+                { "facilityName", createdReport.Booking.Facility.FacilityName },
+                { "severity", createdReport.Severity }
+            };
+
+            await _firebaseService.SendToAllAdminsAsync(
+                title: "🚨 New Facility Issue Reported",
+                body: $"{createdReport.ReportedByUser.FullName} reported: {createdReport.IssueTitle} at {createdReport.Booking.Facility.FacilityName}",
+                data: notificationData
+            );
+        }
+        catch
+        {
+            // Log but don't fail the request if notification fails
+            // Notification failure shouldn't block report creation
+        }
 
         // Parse image URLs from JSON
         List<string>? imageUrls = null;

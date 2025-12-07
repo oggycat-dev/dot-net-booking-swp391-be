@@ -14,6 +14,7 @@ public class UnitOfWork : IUnitOfWork
     private IBookingRepository? _bookingRepository;
     private IHolidayRepository? _holidayRepository;
     private IFacilityIssueReportRepository? _facilityIssueReportRepository;
+    private INotificationRepository? _notificationRepository;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -28,6 +29,7 @@ public class UnitOfWork : IUnitOfWork
     public IBookingRepository Bookings => _bookingRepository ??= new BookingRepository(_context);
     public IHolidayRepository Holidays => _holidayRepository ??= new HolidayRepository(_context);
     public IFacilityIssueReportRepository FacilityIssueReports => _facilityIssueReportRepository ??= new FacilityIssueReportRepository(_context);
+    public INotificationRepository Notifications => _notificationRepository ??= new NotificationRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
