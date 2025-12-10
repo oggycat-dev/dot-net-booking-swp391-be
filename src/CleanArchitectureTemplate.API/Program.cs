@@ -102,10 +102,11 @@ app.UseSwaggerConfiguration(app.Environment);
 // Add static files middleware
 app.UseStaticFiles();
 
-if (isProduction)
-{
-    app.UseHttpsRedirection();
-}
+// HTTPS redirection disabled - Azure handles SSL termination
+// if (isProduction)
+// {
+//     app.UseHttpsRedirection();
+// }
 
 // Handle CORS
 app.UseCorsConfiguration();

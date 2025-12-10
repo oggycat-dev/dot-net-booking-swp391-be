@@ -112,3 +112,20 @@ TestResults/
 tmp/
 temp/
 
+# Firebase credentials (sensitive)
+**/firebase-adminsdk.json
+firebase-adminsdk*.json
+
+# Production configuration files (contains sensitive data)
+**/appsettings.Production.json
+appsettings.Production.json
+
+# Publish profiles (contains deployment credentials)
+**/Properties/PublishProfiles/
+Properties/PublishProfiles/
+**/Properties/ServiceDependencies/
+Properties/ServiceDependencies/
+*.pubxml
+*.pubxml.user
+*.Publish.xml
+profile.arm.json

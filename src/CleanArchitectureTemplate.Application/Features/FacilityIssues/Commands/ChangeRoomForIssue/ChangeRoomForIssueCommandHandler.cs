@@ -1,6 +1,7 @@
 using CleanArchitectureTemplate.Application.Common.DTOs.FacilityIssue;
 using CleanArchitectureTemplate.Application.Common.Exceptions;
 using CleanArchitectureTemplate.Application.Common.Interfaces;
+using CleanArchitectureTemplate.Application.Common.Helpers;
 using CleanArchitectureTemplate.Domain.Entities;
 using CleanArchitectureTemplate.Domain.Enums;
 using MediatR;
@@ -58,7 +59,8 @@ public class ChangeRoomForIssueCommandHandler : IRequestHandler<ChangeRoomForIss
         }
 
         var booking = report.Booking;
-        var now = DateTime.UtcNow;
+        var nowVietnam = TimeZoneHelper.GetVietnamNow();
+        var now = TimeZoneHelper.ConvertToUtc(nowVietnam);
         
         // Check if new facility is available for the remaining time
         // From now until the original booking end time
@@ -75,7 +77,7 @@ public class ChangeRoomForIssueCommandHandler : IRequestHandler<ChangeRoomForIss
                         b.Status == BookingStatus.WaitingLecturerApproval))
             .ToListAsync(cancellationToken);
 
-        var currentTime = now.TimeOfDay;
+        var currentTime = nowVietnam.TimeOfDay; // Use Vietnam time for start time
         var hasConflict = conflictingBookings.Any(b => 
             b.StartTime < booking.EndTime && b.EndTime > currentTime);
 
@@ -87,7 +89,7 @@ public class ChangeRoomForIssueCommandHandler : IRequestHandler<ChangeRoomForIss
         // Update the booking with new facility and adjusted start time
         var oldFacilityName = booking.Facility.FacilityName;
         booking.FacilityId = request.NewFacilityId;
-        booking.StartTime = currentTime; // Start from now
+        booking.StartTime = currentTime; // Start from current Vietnam time (8:21 PM)
         // Keep the original end time
         booking.ModifiedAt = now;
 

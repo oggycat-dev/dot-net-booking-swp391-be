@@ -4,11 +4,11 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CleanArchitectureTemplate.Domain", "src\CleanArchitectureTemplate.Domain\CleanArchitectureTemplate.Domain.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CleanArchitectureTemplate.Application", "src\CleanArchitectureTemplate.Application\CleanArchitectureTemplate.Application.csproj", "{B2C3D4E5-F6G7-8901-BCDE-F23456789012}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CleanArchitectureTemplate.Application", "src\CleanArchitectureTemplate.Application\CleanArchitectureTemplate.Application.csproj", "{6B5A5E52-70ED-4EB1-AC9A-0345165A5333}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CleanArchitectureTemplate.Infrastructure", "src\CleanArchitectureTemplate.Infrastructure\CleanArchitectureTemplate.Infrastructure.csproj", "{C3D4E5F6-G7H8-9012-CDEF-345678901234}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CleanArchitectureTemplate.Infrastructure", "src\CleanArchitectureTemplate.Infrastructure\CleanArchitectureTemplate.Infrastructure.csproj", "{DF68CB50-4F64-45F9-A87C-9899D4B6CC4C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CleanArchitectureTemplate.API", "src\CleanArchitectureTemplate.API\CleanArchitectureTemplate.API.csproj", "{D4E5F6G7-H8I9-0123-DEFG-456789012345}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CleanArchitectureTemplate.API", "src\CleanArchitectureTemplate.API\CleanArchitectureTemplate.API.csproj", "{DC2560F5-C2B2-4D79-9F05-5F230E7397A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,18 +20,18 @@ Global
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B2C3D4E5-F6G7-8901-BCDE-F23456789012}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B2C3D4E5-F6G7-8901-BCDE-F23456789012}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B2C3D4E5-F6G7-8901-BCDE-F23456789012}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B2C3D4E5-F6G7-8901-BCDE-F23456789012}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C3D4E5F6-G7H8-9012-CDEF-345678901234}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C3D4E5F6-G7H8-9012-CDEF-345678901234}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C3D4E5F6-G7H8-9012-CDEF-345678901234}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C3D4E5F6-G7H8-9012-CDEF-345678901234}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D4E5F6G7-H8I9-0123-DEFG-456789012345}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D4E5F6G7-H8I9-0123-DEFG-456789012345}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D4E5F6G7-H8I9-0123-DEFG-456789012345}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D4E5F6G7-H8I9-0123-DEFG-456789012345}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B5A5E52-70ED-4EB1-AC9A-0345165A5333}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B5A5E52-70ED-4EB1-AC9A-0345165A5333}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B5A5E52-70ED-4EB1-AC9A-0345165A5333}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B5A5E52-70ED-4EB1-AC9A-0345165A5333}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF68CB50-4F64-45F9-A87C-9899D4B6CC4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF68CB50-4F64-45F9-A87C-9899D4B6CC4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF68CB50-4F64-45F9-A87C-9899D4B6CC4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF68CB50-4F64-45F9-A87C-9899D4B6CC4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC2560F5-C2B2-4D79-9F05-5F230E7397A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC2560F5-C2B2-4D79-9F05-5F230E7397A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC2560F5-C2B2-4D79-9F05-5F230E7397A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC2560F5-C2B2-4D79-9F05-5F230E7397A5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

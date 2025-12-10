@@ -78,16 +78,14 @@ public static class SwaggerConfiguration
     /// <returns>Web application</returns>
     public static WebApplication UseSwaggerConfiguration(this WebApplication app, IWebHostEnvironment environment)
     {
-        if (environment.IsDevelopment())
+        // Enable Swagger for both Development and Production
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
         {
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Facility Booking System API v1");
-                c.RoutePrefix = "swagger"; // Set Swagger UI at /swagger
-                c.DisplayRequestDuration(); // Show request duration
-            });
-        }
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Facility Booking System API v1");
+            c.RoutePrefix = "swagger"; // Set Swagger UI at /swagger
+            c.DisplayRequestDuration(); // Show request duration
+        });
 
         return app;
     }
