@@ -4,6 +4,7 @@ using CleanArchitectureTemplate.Application.Common.Interfaces;
 using CleanArchitectureTemplate.Domain.Entities;
 using CleanArchitectureTemplate.Domain.Enums;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
 namespace CleanArchitectureTemplate.Application.Features.Facilities.Commands.UpdateFacility;
@@ -70,6 +71,7 @@ public class UpdateFacilityCommandHandler : IRequestHandler<UpdateFacilityComman
 
         facility.FacilityName = request.FacilityName;
         facility.TypeId = request.TypeId;
+        facility.CampusId = request.CampusId;
         facility.Building = request.Building;
         facility.Floor = request.Floor;
         facility.RoomNumber = request.RoomNumber;
@@ -82,8 +84,12 @@ public class UpdateFacilityCommandHandler : IRequestHandler<UpdateFacilityComman
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Reload with related data
-        var updatedFacility = await _unitOfWork.Facilities.GetByIdAsync(facility.Id);
+        // Reload with related data (Type and Campus navigation properties)
+        var updatedFacility = await _unitOfWork.Facilities.GetQueryable()
+            .Where(f => f.Id == facility.Id)
+            .Include(f => f.Type)
+            .Include(f => f.Campus)
+            .FirstOrDefaultAsync(cancellationToken);
 
         return new FacilityDto(
             updatedFacility!.Id,

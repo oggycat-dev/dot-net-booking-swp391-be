@@ -9,6 +9,7 @@ public record UpdateFacilityCommand : IRequest<FacilityDto>
     public Guid Id { get; init; }
     public string FacilityName { get; init; } = string.Empty;
     public Guid TypeId { get; init; }
+    public Guid CampusId { get; init; }
     public string? Building { get; init; }
     public string? Floor { get; init; }
     public string? RoomNumber { get; init; }
