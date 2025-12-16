@@ -253,5 +253,29 @@ public class EmailService : IEmailService
         
         await SendEmailAsync(to, subject, body);
     }
+
+    public async Task SendBookingCancelledByAdminEmailAsync(string to, string fullName, string facilityName, DateTime startTime, DateTime endTime, string reason, string adminName)
+    {
+        var subject = "Your Booking Has Been Cancelled";
+        var body = $@"
+            <html>
+            <body style='font-family: Arial, sans-serif;'>
+                <h2 style='color: #dc3545;'>Booking Cancelled</h2>
+                <p>Dear {fullName},</p>
+                <p>Unfortunately, your booking has been cancelled by the administrator.</p>
+                <div style='background-color: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 15px 0;'>
+                    <p><strong>Facility:</strong> {facilityName}</p>
+                    <p><strong>Date & Time:</strong> {startTime:dd/MM/yyyy} from {startTime:HH:mm} to {endTime:HH:mm}</p>
+                    <p><strong>Cancelled By:</strong> {adminName}</p>
+                    <p><strong>Reason:</strong> {reason}</p>
+                </div>
+                <p>We apologize for any inconvenience this may cause. If you have any questions or need to make a new booking, please contact us or log in to the system.</p>
+                <p>Best regards,<br>FPT Booking System</p>
+            </body>
+            </html>
+        ";
+        
+        await SendEmailAsync(to, subject, body);
+    }
 }
 

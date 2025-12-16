@@ -1,10 +1,13 @@
 using CleanArchitectureTemplate.Application.Common.DTOs;
 using CleanArchitectureTemplate.Application.Common.DTOs.Booking;
+using CleanArchitectureTemplate.Application.Common.Models;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.AdminApproveBooking;
+using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CancelBooking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CheckInBooking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CheckOutBooking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CreateBooking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.LecturerApproveBooking;
+using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetApprovedBookings;
 using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetBookingsForCalendar;
 using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetMyBookingHistory;
 using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetMyPendingBookings;
@@ -283,6 +286,76 @@ public class BookingController : ControllerBase
         await _mediator.Send(command);
 
         var response = ApiResponse<object>.Ok(null, "Checked out successfully");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Get all approved bookings (Admin only - for viewing cancellable bookings)
+    /// </summary>
+    /// <param name="pageNumber">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 10)</param>
+    /// <param name="facilityId">Filter by facility (optional)</param>
+    /// <param name="campusId">Filter by campus (optional)</param>
+    /// <param name="fromDate">Filter from date (optional)</param>
+    /// <param name="toDate">Filter to date (optional)</param>
+    /// <param name="searchTerm">Search term (optional)</param>
+    /// <returns>Paginated list of approved bookings</returns>
+    [HttpGet("approved")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<BookingDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<PaginatedResult<BookingDto>>>> GetApprovedBookings(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] Guid? facilityId = null,
+        [FromQuery] Guid? campusId = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null,
+        [FromQuery] string? searchTerm = null)
+    {
+        var query = new GetApprovedBookingsQuery
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            FacilityId = facilityId,
+            CampusId = campusId,
+            FromDate = fromDate,
+            ToDate = toDate,
+            SearchTerm = searchTerm
+        };
+
+        var result = await _mediator.Send(query);
+        var response = ApiResponse<PaginatedResult<BookingDto>>.Ok(result, $"Retrieved {result.TotalCount} approved booking(s)");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Cancel a booking (Admin only)
+    /// </summary>
+    /// <param name="bookingId">Booking ID</param>
+    /// <param name="request">Cancellation request with reason</param>
+    /// <returns>Success message</returns>
+    [HttpPost("{bookingId}/cancel")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<object>>> CancelBooking(
+        Guid bookingId,
+        [FromBody] CancelBookingRequest request)
+    {
+        var command = new CancelBookingCommand
+        {
+            BookingId = bookingId,
+            Reason = request.Reason
+        };
+
+        await _mediator.Send(command);
+
+        var response = ApiResponse<object>.Ok(null, "Booking cancelled successfully");
         return Ok(response);
     }
 }

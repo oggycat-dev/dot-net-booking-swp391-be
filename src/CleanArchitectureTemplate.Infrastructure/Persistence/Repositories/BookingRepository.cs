@@ -38,6 +38,57 @@ public class BookingRepository : Repository<Booking>, IBookingRepository
             .ToListAsync();
     }
 
+    public async Task<List<Booking>> GetApprovedBookingsAsync(Guid? facilityId = null, Guid? campusId = null, DateTime? fromDate = null, DateTime? toDate = null, string? searchTerm = null)
+    {
+        var query = _context.Bookings
+            .Include(b => b.User)
+            .Include(b => b.Facility)
+                .ThenInclude(f => f.Campus)
+            .Include(b => b.Facility)
+                .ThenInclude(f => f.Type)
+            .Include(b => b.Approver)
+            .Where(b => (b.Status == BookingStatus.Approved || b.Status == BookingStatus.InUse) && !b.IsDeleted)
+            .AsQueryable();
+
+        if (facilityId.HasValue)
+        {
+            query = query.Where(b => b.FacilityId == facilityId.Value);
+        }
+
+        if (campusId.HasValue)
+        {
+            query = query.Where(b => b.Facility.CampusId == campusId.Value);
+        }
+
+        if (fromDate.HasValue)
+        {
+            var fromDateUtc = DateTime.SpecifyKind(fromDate.Value.Date, DateTimeKind.Utc);
+            query = query.Where(b => b.BookingDate >= fromDateUtc);
+        }
+
+        if (toDate.HasValue)
+        {
+            var toDateUtc = DateTime.SpecifyKind(toDate.Value.Date, DateTimeKind.Utc);
+            query = query.Where(b => b.BookingDate <= toDateUtc);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var searchTermLower = searchTerm.ToLower();
+            query = query.Where(b =>
+                b.BookingCode.ToLower().Contains(searchTermLower) ||
+                b.User.FullName.ToLower().Contains(searchTermLower) ||
+                b.Facility.FacilityName.ToLower().Contains(searchTermLower) ||
+                b.Purpose.ToLower().Contains(searchTermLower)
+            );
+        }
+
+        return await query
+            .OrderByDescending(b => b.BookingDate)
+                .ThenByDescending(b => b.StartTime)
+            .ToListAsync();
+    }
+
     public async Task<List<Booking>> GetByUserIdAsync(Guid userId)
     {
         return await _context.Bookings

@@ -311,6 +311,27 @@ public class Booking : BaseEntity
     }
     
     /// <summary>
+    /// Admin cancel booking (can cancel approved bookings)
+    /// </summary>
+    public void AdminCancel(string reason)
+    {
+        if (Status == BookingStatus.Completed)
+        {
+            throw new InvalidOperationException("Cannot cancel completed booking");
+        }
+        
+        if (Status == BookingStatus.Cancelled)
+        {
+            throw new InvalidOperationException("Booking is already cancelled");
+        }
+        
+        Status = BookingStatus.Cancelled;
+        CancellationReason = reason;
+        CancelledAt = DateTime.UtcNow;
+        this.MarkAsModified();
+    }
+    
+    /// <summary>
     /// Add rating and comment
     /// </summary>
     public void AddFeedback(decimal rating, string? comment = null)
