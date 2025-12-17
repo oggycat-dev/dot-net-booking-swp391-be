@@ -2,6 +2,7 @@ using AutoMapper;
 using CleanArchitectureTemplate.Domain.Entities;
 using CleanArchitectureTemplate.Domain.Enums;
 using CleanArchitectureTemplate.Application.Common.DTOs.Users;
+using CleanArchitectureTemplate.Application.Common.DTOs.Booking;
 
 namespace CleanArchitectureTemplate.Application.Common.Mappings;
 
@@ -44,5 +45,56 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.EmailConfirmed, opt => opt.MapFrom(src => false))
             .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true))
             .ForMember(dest => dest.Role, opt => opt.MapFrom(src => Enum.Parse<UserRole>(src.Role)));
+
+        // Booking mappings
+        CreateMap<Booking, BookingDto>()
+            .ConstructUsing(src => new BookingDto(
+                src.Id,
+                src.BookingCode,
+                src.FacilityId,
+                src.Facility != null ? src.Facility.FacilityName : string.Empty,
+                src.Facility != null ? src.Facility.FacilityCode : string.Empty,
+                src.UserId,
+                src.User != null ? src.User.FullName : string.Empty,
+                src.User != null ? src.User.Email : string.Empty,
+                src.User != null ? src.User.Role.ToString() : string.Empty,
+                src.BookingDate,
+                src.StartTime,
+                src.EndTime,
+                src.Purpose,
+                src.NumParticipants,
+                src.EquipmentNeeded,
+                src.Note,
+                src.Status.ToString(),
+                src.LecturerEmail,
+                src.LecturerApprovedBy,
+                src.LecturerApprover != null ? src.LecturerApprover.FullName : null,
+                src.LecturerApprovedAt,
+                src.LecturerRejectReason,
+                src.ApprovedBy,
+                src.Approver != null ? src.Approver.FullName : null,
+                src.ApprovedAt,
+                src.RejectReason,
+                src.CheckedInAt,
+                src.CheckedOutAt,
+                src.Rating,
+                src.Comment,
+                src.CreatedAt
+            ));
+
+        CreateMap<Booking, BookingListDto>()
+            .ConstructUsing(src => new BookingListDto(
+                src.Id,
+                src.BookingCode,
+                src.Facility != null ? src.Facility.FacilityName : string.Empty,
+                src.User != null ? src.User.FullName : string.Empty,
+                src.User != null ? src.User.Role.ToString() : string.Empty,
+                src.BookingDate,
+                src.StartTime,
+                src.EndTime,
+                src.Status.ToString(),
+                src.LecturerEmail,
+                src.CreatedAt
+            ));
     }
 }
