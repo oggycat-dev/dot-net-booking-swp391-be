@@ -7,6 +7,7 @@ using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CheckInBo
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CheckOutBooking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.CreateBooking;
 using CleanArchitectureTemplate.Application.Features.Bookings.Commands.LecturerApproveBooking;
+using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetAllBookingsForAdmin;
 using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetApprovedBookings;
 using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetBookingsForCalendar;
 using CleanArchitectureTemplate.Application.Features.Bookings.Queries.GetMyBookingHistory;
@@ -286,6 +287,50 @@ public class BookingController : ControllerBase
         await _mediator.Send(command);
 
         var response = ApiResponse<object>.Ok(null, "Checked out successfully");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Get all bookings for admin management with filters (Admin only)
+    /// </summary>
+    /// <param name="pageNumber">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 10)</param>
+    /// <param name="facilityId">Filter by facility (optional)</param>
+    /// <param name="campusId">Filter by campus (optional)</param>
+    /// <param name="fromDate">Filter from date (optional)</param>
+    /// <param name="toDate">Filter to date (optional)</param>
+    /// <param name="status">Filter by booking status (optional)</param>
+    /// <param name="searchTerm">Search term for user name, booking code, facility name (optional)</param>
+    /// <returns>Paginated list of all bookings</returns>
+    [HttpGet("admin/all")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<BookingDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<PaginatedResult<BookingDto>>>> GetAllBookingsForAdmin(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] Guid? facilityId = null,
+        [FromQuery] Guid? campusId = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null,
+        [FromQuery] string? status = null,
+        [FromQuery] string? searchTerm = null)
+    {
+        var query = new GetAllBookingsForAdminQuery
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            FacilityId = facilityId,
+            CampusId = campusId,
+            FromDate = fromDate,
+            ToDate = toDate,
+            Status = status,
+            SearchTerm = searchTerm
+        };
+
+        var result = await _mediator.Send(query);
+        var response = ApiResponse<PaginatedResult<BookingDto>>.Ok(result, $"Retrieved {result.TotalCount} booking(s)");
         return Ok(response);
     }
 
